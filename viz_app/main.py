@@ -5,6 +5,8 @@ from dash import dcc
 import plotly.express as px
 import pandas as pd
 
+from dash.dependencies import Input, Output
+
 from viz_app.views.map import make_map_graphs, make_map_panel
 from viz_app.views.distributions import make_distributions_graphs, make_distributions_panel
 from viz_app.views.correlations import make_correlations_graphs, make_correlations_panel
@@ -29,10 +31,12 @@ app.layout = html.Div([
         className="three columns",
         children=[
             html.H5("Visualization Settings"),
-            html.Label("General option 1"),
+            html.Label("Dataset Year"),
             dcc.Dropdown(
-                id="general-option-1",
-                options=[],
+                id="dataset-year",
+                options=[{"label": i, "value": i} for i in range(1979, 2021)],
+                value=2020,
+                searchable=False,
             ),
             html.Div(id='panel-content', className="control_card",
                      style={"textAlign": "float-left"}
@@ -51,17 +55,21 @@ app.layout = html.Div([
 home_layout = []
 
 
-@ app.callback(dash.dependencies.Output('graph-content', 'children'),
-               [dash.dependencies.Input('url', 'pathname')])
-def display_graph(pathname):
+@ app.callback(Output('graph-content', 'children'),
+               [Input('url', 'pathname'),
+               Input('dataset-year', 'value')])
+def display_graph(pathname, year):
+    df = pd.read_csv(
+        os.getcwd() + "\\datasets\\road_safety_" + str(year) + ".csv")
+
     if pathname == '/map':
-        return make_map_graphs()
+        return make_map_graphs(df)
     elif pathname == '/correlations':
-        return make_correlations_graphs()
+        return make_correlations_graphs(df)
     elif pathname == '/trends':
-        return make_trends_graphs()
+        return make_trends_graphs(df)
     elif pathname == '/distributions':
-        return make_distributions_graphs()
+        return make_distributions_graphs(df)
     else:
         return home_layout
     # You could also return a 404 "URL not found" page here

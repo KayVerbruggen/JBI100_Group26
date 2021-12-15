@@ -4,7 +4,7 @@ import plotly.express as px
 import pandas as pd
 
 
-def make_trends_graphs():
+def make_trends_graphs(df):
     return [
         html.H5("Trend Graphs")
     ]

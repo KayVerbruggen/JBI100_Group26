@@ -4,7 +4,7 @@ import plotly.express as px
 import pandas as pd
 
 
-def make_distributions_graphs():
+def make_distributions_graphs(df):
     return [
         html.H5("Distribution Graphs")
     ]
