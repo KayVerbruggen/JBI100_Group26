@@ -60,7 +60,7 @@ home_layout = []
                Input('dataset-year', 'value')])
 def display_graph(pathname, year):
     df = pd.read_csv(
-        os.getcwd() + "\\datasets\\road_safety_" + str(year) + ".csv")
+        os.getcwd() + "/datasets/road_safety_" + str(year) + ".csv")
 
     if pathname == '/map':
         return make_map_graphs(df)
