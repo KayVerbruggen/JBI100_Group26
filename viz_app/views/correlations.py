@@ -37,7 +37,7 @@ def make_correlations_panel():
         ),
         html.Label("Graph Type"),
         dcc.Dropdown(
-            id={'type': 'correlations-attrib', 'index': 2}
+            id={'type': 'correlations-graph-type', 'index': 0}
         ),
     ]
 
@@ -87,8 +87,8 @@ def make_correlations_graphs(df, type, attrib1, attrib2):
     return []
 
 # Changing the correlations panel
-@app.callback([Output({'type': 'correlations-attrib', 'index': 2}, 'options'),
-               Output({'type': 'correlations-attrib', 'index': 2}, 'value')],
+@app.callback([Output({'type': 'correlations-graph-type', 'index': 0}, 'options'),
+               Output({'type': 'correlations-graph-type', 'index': 0}, 'value')],
               [Input({'type': 'correlations-attrib', 'index': ALL}, 'value')])
 def correlation_graph_options(attribs):
     attrib1, attrib2 = attribs[0], attribs[1]

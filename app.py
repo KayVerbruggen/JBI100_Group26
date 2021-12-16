@@ -78,6 +78,7 @@ def display_options(pathname):
                 Input({'type': 'map-attrib', 'index': ALL}, 'value'),
 
                 # Correlations Options
+                Input({'type': 'correlations-graph-type', 'index': ALL}, 'value'),
                 Input({'type': 'correlations-attrib', 'index': ALL}, 'value'),
 
                 # Trends Options
@@ -86,7 +87,7 @@ def display_options(pathname):
                 # Distributions Options
                 Input({'type': 'distributions-attrib', 'index': ALL}, 'value'),
                 ])
-def display_graphs(pathname, year, map_attribs, corr_attribs, 
+def display_graphs(pathname, year, map_attribs, corr_type, corr_attribs, 
                     trends_attribs, dist_attribs):
     df = pd.read_csv(
         os.getcwd() + "/datasets/road_safety_" + str(year) + ".csv")
@@ -94,7 +95,7 @@ def display_graphs(pathname, year, map_attribs, corr_attribs,
     if pathname == '/map':
         return make_map_graphs(df, map_attribs[0])
     elif pathname == '/correlations':
-        return make_correlations_graphs(df, corr_attribs[2], corr_attribs[0], corr_attribs[1])
+        return make_correlations_graphs(df, corr_type[0], corr_attribs[0], corr_attribs[1])
     elif pathname == '/trends':
         return make_trends_graphs(df, trends_attribs[0], trends_attribs[1])
     elif pathname == '/distributions':
