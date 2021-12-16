@@ -3,7 +3,7 @@ from dash import html
 from dash import dcc
 import plotly.express as px
 import pandas as pd
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, MATCH, ALL
 
 from viz_app.main import app
 from config import categorical_attribs, quantitive_attribs
@@ -16,14 +16,20 @@ def make_correlations_panel():
     return [
         html.Label("Attribute 1"),
         dcc.Dropdown(
-            id="correlations-attrib-1",
+            id={
+                'type': "correlations-attrib",
+                'index': 0,
+            },
             options=[{'label': generate_dropdown_label(a), 'value': a} for a in (
                 categorical_attribs + quantitive_attribs)],
             searchable=False,
         ),
         html.Label("Attribute 2"),
         dcc.Dropdown(
-            id="correlations-attrib-2",
+            id={
+                'type': "correlations-attrib",
+                'index': 1,
+            },
             options=[{'label':  generate_dropdown_label(a), 
                     'value': a} for a in (
                 categorical_attribs + quantitive_attribs)],
@@ -31,19 +37,11 @@ def make_correlations_panel():
         ),
         html.Label("Graph Type"),
         dcc.Dropdown(
-            id="correlations-graph-type"
+            id={'type': 'correlations-attrib', 'index': 2}
         ),
     ]
 
-@app.callback(Output('graph-content', 'children'),
-            [Input('dataset-year', 'value'),
-            Input('correlations-graph-type', 'value'),
-            Input('correlations-attrib-1', 'value'),
-            Input('correlations-attrib-2', 'value')])
-def make_correlations_graphs(year, type, attrib1, attrib2):
-    df = pd.read_csv(
-        os.getcwd() + "/datasets/road_safety_" + str(year) + ".csv")
-
+def make_correlations_graphs(df, type, attrib1, attrib2):
     # You can use: 
     # (attrib1 in categorical_attribs) and 
     # (attrib1 in quantitive_attribs)
@@ -87,15 +85,13 @@ def make_correlations_graphs(year, type, attrib1, attrib2):
         ]
 
     return []
-        
-
 
 # Changing the correlations panel
-@app.callback([Output('correlations-graph-type', 'options'),
-                Output('correlations-graph-type', 'value')],
-              [Input('correlations-attrib-1', 'value'),
-               Input('correlations-attrib-2', 'value')])
-def correlation_graph_options(attrib1, attrib2):
+@app.callback([Output({'type': 'correlations-attrib', 'index': 2}, 'options'),
+               Output({'type': 'correlations-attrib', 'index': 2}, 'value')],
+              [Input({'type': 'correlations-attrib', 'index': ALL}, 'value')])
+def correlation_graph_options(attribs):
+    attrib1, attrib2 = attribs[0], attribs[1]
     # Both categorical
     if (attrib1 in categorical_attribs and attrib2 in categorical_attribs):
         return [{'label': 'Parallel category diagram', 'value': 'parallel'}], 'parallel'

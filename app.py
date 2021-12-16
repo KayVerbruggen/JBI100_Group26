@@ -4,13 +4,13 @@ from dash import html
 from dash import dcc
 import plotly.express as px
 import pandas as pd
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, MATCH, ALL
 
 from viz_app.main import app
-from viz_app.views.map import make_map_graphs, make_map_panel
-from viz_app.views.distributions import make_distributions_graphs, make_distributions_panel
-from viz_app.views.correlations import make_correlations_graphs, make_correlations_panel
-from viz_app.views.trends import make_trends_graphs, make_trends_panel
+from viz_app.views.map import make_map_panel, make_map_graphs
+from viz_app.views.distributions import make_distributions_panel, make_distributions_graphs
+from viz_app.views.correlations import make_correlations_panel, make_correlations_graphs
+from viz_app.views.trends import make_trends_panel, make_trends_graphs
 import config
 
 app.layout = html.Div([
@@ -56,7 +56,7 @@ app.layout = html.Div([
 # Changing the left panel based on the url
 @ app.callback(dash.dependencies.Output('panel-content', 'children'),
                [dash.dependencies.Input('url', 'pathname')])
-def display_graph(pathname):
+def display_options(pathname):
     if pathname == '/map':
         return make_map_panel()
     elif pathname == '/correlations':
@@ -65,6 +65,40 @@ def display_graph(pathname):
         return make_trends_panel()
     elif pathname == '/distributions':
         return make_distributions_panel()
+    else:
+        return []
+    # You could also return a 404 "URL not found" page here
+
+# Changing the left panel based on the url
+@ app.callback(dash.dependencies.Output('graph-content', 'children'),
+               [Input('url', 'pathname'),
+                Input('dataset-year', 'value'),
+                
+                # Map Options
+                Input({'type': 'map-attrib', 'index': ALL}, 'value'),
+
+                # Correlations Options
+                Input({'type': 'correlations-attrib', 'index': ALL}, 'value'),
+
+                # Trends Options
+                Input({'type': 'trends-attrib', 'index': ALL}, 'value'),
+
+                # Distributions Options
+                Input({'type': 'distributions-attrib', 'index': ALL}, 'value'),
+                ])
+def display_graphs(pathname, year, map_attribs, corr_attribs, 
+                    trends_attribs, dist_attribs):
+    df = pd.read_csv(
+        os.getcwd() + "/datasets/road_safety_" + str(year) + ".csv")
+
+    if pathname == '/map':
+        return make_map_graphs(df, map_attribs[0])
+    elif pathname == '/correlations':
+        return make_correlations_graphs(df, corr_attribs[2], corr_attribs[0], corr_attribs[1])
+    elif pathname == '/trends':
+        return make_trends_graphs(df, trends_attribs[0], trends_attribs[1])
+    elif pathname == '/distributions':
+        return make_distributions_graphs(df, dist_attribs[0], dist_attribs[1])
     else:
         return []
     # You could also return a 404 "URL not found" page here

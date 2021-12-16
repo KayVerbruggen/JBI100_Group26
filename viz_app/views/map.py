@@ -3,18 +3,21 @@ from dash import dcc
 import plotly.express as px
 import pandas as pd
 
-
-def make_map_graphs(df):
-    return [
-        html.H5("Map Graphs")
-    ]
-
+from config import categorical_attribs, quantitive_attribs
 
 def make_map_panel():
     return [
-        html.Label("Map option 1"),
+        html.Label("Attribute"),
         dcc.Dropdown(
-            id="map-option-1",
-            options=[],
+            id={
+                'type': "map-attrib",
+                'index': 0,
+            },
+            options=[{'label': a, 'value': a} for a in quantitive_attribs],
         ),
+    ]
+
+def make_map_graphs(df, attrib):
+    return [
+        html.H5("Map Graph")
     ]
