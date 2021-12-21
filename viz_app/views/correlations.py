@@ -9,7 +9,7 @@ from viz_app.main import app
 from config import categorical_attribs, quantitive_attribs
 
 def generate_dropdown_label(a):
-    return a.replace("_", " ") + \
+    return a.replace("_", " ").title() + \
         (' (Categorical)' if a in categorical_attribs else ' (Quantative)')
 
 def make_correlations_panel():
@@ -45,8 +45,8 @@ def make_correlations_graphs(df, type, attrib1, attrib2):
     # You can use: 
     # (attrib1 in categorical_attribs) and 
     # (attrib1 in quantitive_attribs)
-    # To check the type of attribute.
 
+    # To check the type of attribute.
     if type == 'parallel':
         return [
             html.H5("Parallel Category Diagram"),
@@ -56,17 +56,25 @@ def make_correlations_graphs(df, type, attrib1, attrib2):
     
     if type == 'scatter':
         # Just a random hard coded example that I still had to test everything.
-        df_junction = df[(df['junction_detail'] != -1) &
-                     (df['junction_detail'] != 99)].copy()
-        casualties_by_junction = df_junction[[
-        'number_of_casualties', 'junction_detail']].groupby('junction_detail').sum()
-        casualties_by_junction['fatality'] = df_junction[['accident_severity', 'junction_detail']
-                                                     ][df_junction.accident_severity == 1].groupby('junction_detail').count()['accident_severity']
-        casualties_by_junction['fatality'] = casualties_by_junction['fatality'] / \
-        casualties_by_junction['number_of_casualties'] * 100
-        fig = px.scatter(casualties_by_junction, 
-            x='number_of_casualties', y='fatality', 
-            color=casualties_by_junction.index, height=800)
+        # Basic missing value filtering for any categorical variable
+
+        # When attrib2 is empty, the plot is automatically updated to against the accident index
+        if (attrib2 == None):
+            return False
+            
+        df_temp = df.copy()
+        df_fatal = df_temp[['accident_severity', attrib1]][df_temp["accident_severity"] == 1].groupby(attrib1).count()[['accident_severity']].reset_index()
+        df_fatal["accident_count"] = df_temp.groupby(attrib1).count()["accident_index"]
+        df_fatal["fatality_rate"] = df_fatal["accident_severity"] / df_fatal["accident_count"] * 100
+
+        if (attrib2 == "accident_count"):
+            df_temp = df_temp.groupby(by=attrib1).count()[["accident_index"]].rename(columns={"accident_index": "accident_count"}).reset_index()
+            df_temp["fatality_rate"] = df_fatal["fatality_rate"]
+        if (attrib2 == "fatality_rate"):
+            df_temp = df_fatal
+        
+        # Create new plot
+        fig = px.scatter(df_temp, x=attrib1, y=attrib2, height=800, color="fatality_rate")
         fig.update_traces(marker=dict(size=50,
                                            line=dict(width=2,
                                                      color='DarkSlateGrey')),

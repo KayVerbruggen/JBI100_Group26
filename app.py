@@ -13,6 +13,19 @@ from viz_app.views.correlations import make_correlations_panel, make_correlation
 from viz_app.views.trends import make_trends_panel, make_trends_graphs
 import config
 
+# Missing value dictionary for preprocessing
+# TODO: Fill in missing value placeholder, e.g. Speed limit: -1
+MISSING_VALUE_TABLE = {
+    "light_conditions": [-1],
+    "special_conditions_at_site": [-1],
+    "road_surface_conditions": [-1],
+    "junction_control": [-1, 99],
+    "junction_detail": [99],
+    "time": [],
+    "speed_limit": [-1],
+}
+
+
 app.layout = html.Div([
     html.Div(
         className="topnav",
@@ -91,7 +104,7 @@ def display_graphs(pathname, year, map_attribs, corr_type, corr_attribs,
                     trends_attribs, dist_attribs):
     df = pd.read_csv(
         os.getcwd() + "/datasets/road_safety_" + str(year) + ".csv")
-
+    df = remove_missing_value(df)
     if pathname == '/map':
         return make_map_graphs(df, map_attribs[0])
     elif pathname == '/correlations':
@@ -103,6 +116,15 @@ def display_graphs(pathname, year, map_attribs, corr_type, corr_attribs,
     else:
         return []
     # You could also return a 404 "URL not found" page here
+
+# Remove rows with missing values for every target attribute
+def remove_missing_value(df):
+    columns = MISSING_VALUE_TABLE.keys()
+    df_processed = df.copy()
+    for attribute in columns:
+        for missing_value in MISSING_VALUE_TABLE[attribute]:
+            df_processed = df_processed[df_processed[attribute] != missing_value]
+    return df_processed
 
 if __name__ == '__main__':
     app.run_server(debug=True)
