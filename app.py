@@ -82,7 +82,7 @@ def display_options(pathname):
         return []
     # You could also return a 404 "URL not found" page here
 
-# Changing the left panel based on the url
+# Changing the right panel based on the url
 @ app.callback(dash.dependencies.Output('graph-content', 'children'),
                [Input('url', 'pathname'),
                 Input('dataset-year', 'value'),
