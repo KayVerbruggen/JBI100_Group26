@@ -4,6 +4,7 @@ from dash import html
 from dash import dcc
 import plotly.express as px
 import pandas as pd
+import datetime
 from dash.dependencies import Input, Output, MATCH, ALL
 
 from viz_app.main import app
@@ -125,6 +126,27 @@ def remove_missing_value(df):
         for missing_value in MISSING_VALUE_TABLE[attribute]:
             df_processed = df_processed[df_processed[attribute] != missing_value]
     return df_processed
+
+# Method to generate list of time intervals for grouping accidents
+def generate_list_intervals(interval_size):
+    time_intervals = []
+    start = "00:00"
+    end = "23:59"
+    delta = datetime.timedelta(minutes=interval_size)
+    start = datetime.datetime.strptime(start, '%H:%M')
+    end = datetime.datetime.strptime(end, '%H:%M' )
+    t = start
+    while t <= end :
+        time_intervals.append(int(datetime.datetime.strftime(t, '%H%M')))
+        t += delta
+    return time_intervals
+
+# Auxillary method for finding the closest time interval for an accident
+def find_closest_interval(row, intervals):
+    abs_diff = lambda interval: abs(interval - row["time_index"])
+    closest_interval = min(intervals, key=abs_diff)
+    return closest_interval
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)

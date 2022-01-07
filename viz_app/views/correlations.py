@@ -1,6 +1,7 @@
 import os
 from dash import html
 from dash import dcc
+import datetime
 import plotly.express as px
 import pandas as pd
 from dash.dependencies import Input, Output, MATCH, ALL
@@ -41,51 +42,47 @@ def make_correlations_panel():
         ),
     ]
 
-def make_correlations_graphs(df, type, attrib1, attrib2):
+def make_correlations_graphs(df, graph_type, attrib1, attrib2):
     # You can use: 
     # (attrib1 in categorical_attribs) and 
     # (attrib1 in quantitive_attribs)
 
+    # No plotting when an attribute is missing
+    if (isinstance(attrib1, type(None)) or isinstance(attrib2, type(None))):
+        return False
+
+    df_temp = df.copy()
+
     # To check the type of attribute.
-    if type == 'parallel':
+    if graph_type == 'parallel':
         return [
             html.H5("Parallel Category Diagram"),
             # html.H6(attrib1 + " " + attrib2),
             #dcc.Graph(figure=fig)
         ]
     
-    if type == 'scatter':
-        # Just a random hard coded example that I still had to test everything.
-        # Basic missing value filtering for any categorical variable
-
-        # When attrib2 is empty, the plot is automatically updated to against the accident index
-        if (attrib2 == None):
-            return False
-            
-        df_temp = df.copy()
-        df_fatal = df_temp[['accident_severity', attrib1]][df_temp["accident_severity"] == 1].groupby(attrib1).count()[['accident_severity']].reset_index()
+    if graph_type == 'scatter':
+        # Compute the number of fatal accidents in each category
+        df_fatal = df_temp[['accident_severity', attrib1]][df_temp["accident_severity"] == 1].groupby(attrib1).count()[['accident_severity']]
+        # Rename column
+        df_fatal.rename(columns={"accident_severity": "fatal_accident_count"}, inplace=True)
+        # Compute total number of accidents in each category
         df_fatal["accident_count"] = df_temp.groupby(attrib1).count()["accident_index"]
-        df_fatal["fatality_rate"] = df_fatal["accident_severity"] / df_fatal["accident_count"] * 100
+        # Compute fatality rate of accidents in each category,
+        # later used in color scale
+        df_fatal["fatality_rate"] = round(df_fatal["fatal_accident_count"] / df_fatal["accident_count"] * 100, 2)
 
-        if (attrib2 == "accident_count"):
-            df_temp = df_temp.groupby(by=attrib1).count()[["accident_index"]].rename(columns={"accident_index": "accident_count"}).reset_index()
-            df_temp["fatality_rate"] = df_fatal["fatality_rate"]
-        if (attrib2 == "fatality_rate"):
-            df_temp = df_fatal
-        
         # Create new plot
-        fig = px.scatter(df_temp, x=attrib1, y=attrib2, height=800, color="fatality_rate")
-        fig.update_traces(marker=dict(size=50,
-                                           line=dict(width=2,
-                                                     color='DarkSlateGrey')),
-                               selector=dict(mode='markers'))
+        fig = px.scatter(df_fatal.reset_index() , x=attrib1, y=attrib2, height=800,
+            color="fatality_rate", color_continuous_scale="sunset")
+        fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))
         return [
             html.H5("Scatter Plot"),
-            #html.H6(attrib1 + " " + attrib2),
+            html.H6(attrib1 + " " + attrib2),
             dcc.Graph(figure=fig)
         ]
     
-    if type == 'histogram':
+    if graph_type == 'histogram':
         return [
             html.H5("Histogram"),
             # html.H6(attrib1 + " " + attrib2),
@@ -116,3 +113,24 @@ def correlation_graph_options(attribs):
         ], 'scatter'
 
     return [], ''
+
+# Method to generate list of time intervals for grouping accidents
+def generate_list_intervals(interval_size):
+    time_intervals = []
+    start = "00:00"
+    end = "23:59"
+    delta = datetime.timedelta(minutes=interval_size)
+    start = datetime.datetime.strptime(start, '%H:%M')
+    end = datetime.datetime.strptime(end, '%H:%M' )
+    t = start
+    while t <= end :
+        time_intervals.append(int(datetime.datetime.strftime(t, '%H%M')))
+        t += delta
+    return time_intervals
+
+# Auxillary method for finding the closest time interval for an accident
+def find_closest_interval(row, intervals):
+    abs_diff = lambda interval: abs(interval - row["time_index"])
+    closest_interval = min(intervals, key=abs_diff)
+    return closest_interval
+
