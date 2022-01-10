@@ -100,10 +100,25 @@ def make_correlations_graphs(df, graph_type, attrib1, attrib2):
         ]
     
     if graph_type == 'histogram':
+        # Compute the number of fatal accidents in each category
+        df_fatal = df_temp[['accident_severity', attrib1]][df_temp["accident_severity"] == 1].groupby(attrib1).count()[
+            ['accident_severity']]
+        # Rename column
+        df_fatal.rename(columns={"accident_severity": "fatal_accident_count"}, inplace=True)
+        # Compute total number of accidents in each category
+        df_fatal["accident_count"] = df_temp.groupby(attrib1).count()["accident_index"]
+        # Compute fatality rate of accidents in each category,
+        # later used in color scale
+        df_fatal["fatality_rate"] = round(df_fatal["fatal_accident_count"] / df_fatal["accident_count"] * 100, 2)
+
+        # Create the Histogram
+        fig = px.histogram(df_fatal.reset_index(), x=attrib1, y=attrib2, height=800,
+                         color="fatality_rate" ,nbins=df[attrib1].unique().size)
+        fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))
         return [
             html.H5("Histogram"),
-            # html.H6(attrib1 + " " + attrib2),
-            # dcc.Graph(...)
+            html.H6(attrib1 + " " + attrib2),
+            dcc.Graph(figure=fig)
         ]
 
     return []
