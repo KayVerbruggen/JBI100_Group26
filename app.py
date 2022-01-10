@@ -13,18 +13,8 @@ from viz_app.views.distributions import make_distributions_panel, make_distribut
 from viz_app.views.correlations import make_correlations_panel, make_correlations_graphs
 from viz_app.views.trends import make_trends_panel, make_trends_graphs
 import config
-
-# Missing value dictionary for preprocessing
-# TODO: Fill in missing value placeholder, e.g. Speed limit: -1
-MISSING_VALUE_TABLE = {
-    "light_conditions": [-1],
-    "special_conditions_at_site": [-1],
-    "road_surface_conditions": [-1],
-    "junction_control": [-1, 99],
-    "junction_detail": [99],
-    "time": [],
-    "speed_limit": [-1],
-}
+from config import ID_TO_LIGHT_CONDITIONS, ID_TO_JUNCTION_DETAIL, ID_TO_SPECIAL_CONDITIONS_AT_SITE, \
+                   MISSING_VALUE_TABLE, ID_TO_JUNCTION_CONTROL, ID_TO_ROAD_SURFACE_CONDITIONS, ID_TO_SPECIAL_CONDITIONS_AT_SITE
 
 
 app.layout = html.Div([
@@ -105,7 +95,8 @@ def display_graphs(pathname, year, map_attribs, corr_type, corr_attribs,
                     trends_attribs, dist_attribs):
     df = pd.read_csv(
         os.getcwd() + "/datasets/road_safety_" + str(year) + ".csv")
-    df = remove_missing_value(df)
+    df_valid = remove_missing_value(df)
+    df = id_to_value(df_valid)
     if pathname == '/map':
         return make_map_graphs(df, map_attribs[0])
     elif pathname == '/correlations':
@@ -126,6 +117,13 @@ def remove_missing_value(df):
         for missing_value in MISSING_VALUE_TABLE[attribute]:
             df_processed = df_processed[df_processed[attribute] != missing_value]
     return df_processed
+
+# Map IDS to the corresponding value
+def id_to_value(df):
+    df_mapped = df.copy()
+    return df_mapped.replace({'light_conditions': ID_TO_LIGHT_CONDITIONS, 'junction_detail' : ID_TO_JUNCTION_DETAIL, \
+    'junction_control' : ID_TO_JUNCTION_CONTROL, 'road_surface_conditions' : ID_TO_ROAD_SURFACE_CONDITIONS, \
+    'special_conditions_at_site' : ID_TO_SPECIAL_CONDITIONS_AT_SITE})
 
 # Method to generate list of time intervals for grouping accidents
 def generate_list_intervals(interval_size):

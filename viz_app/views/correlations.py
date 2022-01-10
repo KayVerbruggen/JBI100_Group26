@@ -8,7 +8,6 @@ from dash.dependencies import Input, Output, MATCH, ALL
 
 from viz_app.main import app
 from config import categorical_attribs, quantitive_attribs
-
 def generate_dropdown_label(a):
     return a.replace("_", " ").title() + \
         (' (Categorical)' if a in categorical_attribs else ' (Quantative)')
@@ -54,11 +53,29 @@ def make_correlations_graphs(df, graph_type, attrib1, attrib2):
     df_temp = df.copy()
 
     # To check the type of attribute.
-    if graph_type == 'parallel':
+    if graph_type == 'parallel':   
+        attributes_to_group = []
+       
+        # if chosen attributes are the same, show only one
+        if attrib1 == attrib2:
+            attributes_to_group.append(attrib1)
+        else:
+            attributes_to_group.append(attrib1)
+            attributes_to_group.append(attrib2)
+        # Compute fatality rate of each combination of the two chosen attributes
+        df_fatality = (df_temp[df_temp['accident_severity'] == 1].groupby(attributes_to_group).count() / df_temp.groupby(attributes_to_group).count()).rename(columns={'accident_severity': 'fatality'})
+        # Join df_temp and df_fatality on the chosen features
+        final_df = pd.merge(df_temp, df_fatality, on=attributes_to_group)
+
+        # Create parallel categories diagram
+        fig = px.parallel_categories(final_df, dimensions=attributes_to_group, color='fatality', color_continuous_scale=px.colors.sequential.Reds, height=800)
+        fig.update_layout(
+        margin=dict(l=270, r=250, t=20, b=20),
+        )
+        fig.layout['coloraxis']['colorbar']['x'] = 1.30
         return [
-            html.H5("Parallel Category Diagram"),
-            # html.H6(attrib1 + " " + attrib2),
-            #dcc.Graph(figure=fig)
+            html.H5("Parallel Categories Diagram"),
+            dcc.Graph(figure=fig)
         ]
     
     if graph_type == 'scatter':
@@ -97,8 +114,12 @@ def make_correlations_graphs(df, graph_type, attrib1, attrib2):
               [Input({'type': 'correlations-attrib', 'index': ALL}, 'value')])
 def correlation_graph_options(attribs):
     attrib1, attrib2 = attribs[0], attribs[1]
+  
     # Both categorical
     if (attrib1 in categorical_attribs and attrib2 in categorical_attribs):
+        # This feature makes no sense for the parallel diagram, and therefore should not be a valid combination
+        if (attrib1 == 'accident_severity' or attrib2 == 'accident_severity'):
+            return [], ''
         return [{'label': 'Parallel category diagram', 'value': 'parallel'}], 'parallel'
 
     # Both quantitive

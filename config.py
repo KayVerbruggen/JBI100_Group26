@@ -1,5 +1,15 @@
 from pandas.core.frame import DataFrame
 
+# Missing value dictionary for preprocessing
+MISSING_VALUE_TABLE = {
+    "light_conditions": [-1],
+    "special_conditions_at_site": [-1, 9],
+    "road_surface_conditions": [-1, 9, 6, 7],
+    "junction_control": [-1, 0, 9],
+    "junction_detail": [99, -1],
+    "time": [],
+    "speed_limit": [-1, 660, 630],
+}
 
 categorical_attribs = [
     'speed_limit',
@@ -17,6 +27,51 @@ quantitive_attribs = [
     'fatality_rate',
 ]
 
+ID_TO_LIGHT_CONDITIONS = {
+    1 : 'Daylight',
+    4 : 'Darkness: street lights present and lit',
+    5 : 'Darkness: street lights present but unlit',
+    6 : 'Darkness: no street lighting',
+    7 : 'Darkness: street lighting unknown',
+}
+
+ID_TO_JUNCTION_DETAIL = {
+    0 : 'Not at or within 20 metres of junction',
+    1 : 'Roundabout',
+    2 : 'Mini roundabout',
+    3 : 'T or staggered junction',
+    5 : 'Slip road',
+    6 : 'Crossroads',
+    7 : 'Junction more than four arms (not RAB)',
+    8 : 'Using private drive or entrance',
+    9 : 'Other junction',
+}
+
+ID_TO_JUNCTION_CONTROL = {
+    1 : 'Authorised person',
+    2 : 'Automatic traffic signal',
+    3 : 'Stop sign', 
+    4 : 'Give way or uncontrolled',
+}
+
+ID_TO_ROAD_SURFACE_CONDITIONS = {
+    1 : 'Dry',
+    2 : 'Wet / Damp',
+    3 : 'Snow',
+    4 : 'Frost / Ice',
+    5 : 'Flood (surface water over 3cm deep)',
+}
+
+ID_TO_SPECIAL_CONDITIONS_AT_SITE = {
+    0 : 'None',
+    1 : 'Auto traffic signal out',
+    2 : 'Auto traffic signal partially defective',
+    3 : 'Permanent road signing or marking defective or obscured',
+    4 : 'Roadworks',
+    5 : 'Road surface defective',
+    6 : 'Oil or diesel',
+    7 : 'Mud',
+}
 
 ID_TO_POLICE_FORCE_AREA = {
     1 : 'Metropolitan Police',
@@ -111,3 +166,4 @@ POPULATION_BY_POLICE_FORCE_AREA = {
     'South Wales':         1345300,
     'Dyfed-Powys':          522700,
 }
+
