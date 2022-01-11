@@ -79,15 +79,8 @@ def make_correlations_graphs(df, graph_type, attrib1, attrib2):
         ]
     
     if graph_type == 'scatter':
-        # Compute the number of fatal accidents in each category
-        df_fatal = df_temp[['accident_severity', attrib1]][df_temp["accident_severity"] == 1].groupby(attrib1).count()[['accident_severity']]
-        # Rename column
-        df_fatal.rename(columns={"accident_severity": "fatal_accident_count"}, inplace=True)
-        # Compute total number of accidents in each category
-        df_fatal["accident_count"] = df_temp.groupby(attrib1).count()["accident_index"]
-        # Compute fatality rate of accidents in each category,
-        # later used in color scale
-        df_fatal["fatality_rate"] = round(df_fatal["fatal_accident_count"] / df_fatal["accident_count"] * 100, 2)
+
+        df_fatal = calculate_fatality_rate(df_temp, attrib1)
 
         # Create new plot
         fig = px.scatter(df_fatal.reset_index() , x=attrib1, y=attrib2, height=800,
@@ -100,17 +93,8 @@ def make_correlations_graphs(df, graph_type, attrib1, attrib2):
         ]
     
     if graph_type == 'histogram':
-        # Compute the number of fatal accidents in each category
-        df_fatal = df_temp[['accident_severity', attrib1]][df_temp["accident_severity"] == 1].groupby(attrib1).count()[
-            ['accident_severity']]
-        # Rename column
-        df_fatal.rename(columns={"accident_severity": "fatal_accident_count"}, inplace=True)
-        # Compute total number of accidents in each category
-        df_fatal["accident_count"] = df_temp.groupby(attrib1).count()["accident_index"]
-        # Compute fatality rate of accidents in each category,
-        # later used in color scale
-        df_fatal["fatality_rate"] = round(df_fatal["fatal_accident_count"] / df_fatal["accident_count"] * 100, 2)
 
+        df_fatal = calculate_fatality_rate(df_temp, attrib1)
         # Create the Histogram
         fig = px.histogram(df_fatal.reset_index(), x=attrib1, y=attrib2, height=800,
                          color="fatality_rate" ,nbins=df[attrib1].unique().size)
@@ -122,6 +106,21 @@ def make_correlations_graphs(df, graph_type, attrib1, attrib2):
         ]
 
     return []
+
+def calculate_fatality_rate(df_temp,attrib1):
+
+    # Compute the number of fatal accidents in each category
+    df_fatal = df_temp[['accident_severity', attrib1]][df_temp["accident_severity"] == 1].groupby(attrib1).count()[
+        ['accident_severity']]
+    # Rename column
+    df_fatal.rename(columns={"accident_severity": "fatal_accident_count"}, inplace=True)
+    # Compute total number of accidents in each category
+    df_fatal["accident_count"] = df_temp.groupby(attrib1).count()["accident_index"]
+    # Compute fatality rate of accidents in each category,
+    # later used in color scale
+    df_fatal["fatality_rate"] = round(df_fatal["fatal_accident_count"] / df_fatal["accident_count"] * 100, 2)
+
+    return df_fatal
 
 # Changing the correlations panel
 @app.callback([Output({'type': 'correlations-graph-type', 'index': 0}, 'options'),
