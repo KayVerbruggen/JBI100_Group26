@@ -131,9 +131,6 @@ def correlation_graph_options(attribs):
   
     # Both categorical
     if (attrib1 in categorical_attribs and attrib2 in categorical_attribs):
-        # This feature makes no sense for the parallel diagram, and therefore should not be a valid combination
-        if (attrib1 == 'accident_severity' or attrib2 == 'accident_severity'):
-            return [], ''
         return [{'label': 'Parallel category diagram', 'value': 'parallel'}], 'parallel'
 
     # Both quantitive
