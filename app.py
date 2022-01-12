@@ -9,7 +9,6 @@ from dash.dependencies import Input, Output, MATCH, ALL
 
 from viz_app.main import app
 from viz_app.views.map import make_map_panel, make_map_graphs
-from viz_app.views.distributions import make_distributions_panel, make_distributions_graphs
 from viz_app.views.correlations import make_correlations_panel, make_correlations_graphs
 from viz_app.views.trends import make_trends_panel, make_trends_graphs
 import config
@@ -25,7 +24,6 @@ app.layout = html.Div([
             dcc.Link('Map', href='/map'),
             dcc.Link('Correlations', href='/correlations'),
             dcc.Link('Trends', href='/trends'),
-            dcc.Link('Distributions', href='/distributions'),
         ]
     ),
     dcc.Location(id='url', refresh=False),
@@ -67,8 +65,6 @@ def display_options(pathname):
         return make_correlations_panel()
     elif pathname == '/trends':
         return make_trends_panel()
-    elif pathname == '/distributions':
-        return make_distributions_panel()
     else:
         return []
     # You could also return a 404 "URL not found" page here
@@ -87,12 +83,9 @@ def display_options(pathname):
 
                 # Trends Options
                 Input({'type': 'trends-attrib', 'index': ALL}, 'value'),
-
-                # Distributions Options
-                Input({'type': 'distributions-attrib', 'index': ALL}, 'value'),
                 ])
 def display_graphs(pathname, year, map_attribs, corr_type, corr_attribs, 
-                    trends_attribs, dist_attribs):
+                    trends_attribs):
     df = pd.read_csv(
         os.getcwd() + "/datasets/road_safety_" + str(year) + ".csv")
     df_valid = remove_missing_value(df)
@@ -103,8 +96,6 @@ def display_graphs(pathname, year, map_attribs, corr_type, corr_attribs,
         return make_correlations_graphs(df, corr_type[0], corr_attribs[0], corr_attribs[1])
     elif pathname == '/trends':
         return make_trends_graphs(df, trends_attribs[0], trends_attribs[1])
-    elif pathname == '/distributions':
-        return make_distributions_graphs(df, dist_attribs[0], dist_attribs[1])
     else:
         return []
     # You could also return a 404 "URL not found" page here
