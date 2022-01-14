@@ -39,32 +39,44 @@ def make_trends_graphs(df, other_year, attrib, trends_color_disc):
 
 def make_trends_panel():
     return [
-        html.Label("Other Year"),
-        dcc.Dropdown(
-            id={
-                'type': "trends-attrib",
-                'index': 0,
+        html.Div(
+            style={
+                "display": "flex",
+                "flex-direction": "column",
+                "gap": "16px",
             },
-            options=[{"label": i, "value": i} for i in range(1979, 2021)],
-            value=2019,
-            searchable=False,
-        ),
-        html.Label("Attribute"),
-        dcc.Dropdown(
-            id={
-                'type': "trends-attrib",
-                'index': 1,
-            },
-            options=[{'label': generate_dropdown_label(a), 'value': a} for a in ['fatality_rate', 'accident_count']],
-        ),
-        html.Label("Color Scale - Discrete"),
-        dcc.Dropdown(
-            id={
-                'type': "trends-colorscale-disc",
-                'index': 0,
-            },
-            options=[{"value": x, "label": x} 
-                 for x in discrete_col],
-            value='Pastel1'
-        ),
+            children = [
+                html.Div([
+                    html.Label("Other Year"),
+                    dcc.Dropdown(
+                        id={
+                            'type': "trends-attrib",
+                            'index': 0,
+                        },
+                        options=[{"label": i, "value": i} for i in range(1979, 2021)],
+                        value=2019,
+                        searchable=False)
+                ]),
+                html.Div([
+                    html.Label("Attribute"),
+                    dcc.Dropdown(
+                        id={
+                            'type': "trends-attrib",
+                            'index': 1,
+                        },
+                        options=[{'label': generate_dropdown_label(a), 'value': a} for a in ['fatality_rate', 'accident_count']],
+                    )
+                ]),
+                html.Div([
+                    html.Label("Color Scale - Discrete"),
+                    dcc.Dropdown(
+                        id={
+                            'type': "trends-colorscale-disc",
+                            'index': 0,
+                        },
+                        options=[{"value": x, "label": x} 
+                            for x in discrete_col],
+                        value='Pastel1'
+                    )])
+                ])
     ]

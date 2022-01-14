@@ -1,4 +1,5 @@
 import os
+from statistics import median
 from dash import html
 from dash import dcc
 import datetime
@@ -8,59 +9,75 @@ from dash.dependencies import Input, Output, MATCH, ALL
 
 from viz_app.main import app
 from config import categorical_attribs, quantitive_attribs, discrete_col, seq_cont_col
+
+
 def generate_dropdown_label(a):
-    return a.replace("_", " ").title() + \
-        (' (Categorical)' if a in categorical_attribs else ' (Quantative)')
+    return a.replace("_", " ").title()
 
 
 def make_correlations_panel():
     return [
-        html.Label("Attribute 1"),
-        dcc.Dropdown(
-            id={
-                'type': "correlations-attrib",
-                'index': 0,
-            },
-            options=[{'label': generate_dropdown_label(a), 'value': a} for a in (
-                categorical_attribs + quantitive_attribs)],
-            searchable=False,
-        ),
-        html.Label("Attribute 2"),
-        dcc.Dropdown(
-            id={
-                'type': "correlations-attrib",
-                'index': 1,
-            },
-            options=[{'label':  generate_dropdown_label(a), 
-                    'value': a} for a in (
-                categorical_attribs + quantitive_attribs)],
-            searchable=False,
-        ),
-        html.Label("Graph Type"),
-        dcc.Dropdown(
-            id={'type': 'correlations-graph-type', 'index': 0}
-        ),
-        html.Label("Color Scale - Sequential"),
-        dcc.Dropdown(
-            id={
-                'type': "correlations-colorscale-seq",
-                'index': 0,
-            },
-            options=[{"value": x, "label": x} 
-                 for x in seq_cont_col],
-            value='Reds'
-            ),
-        html.Label("Color Scale - Discrete"),
-        dcc.Dropdown(
-            id={
-                'type': "correlations-colorscale-disc",
-                'index': 0,
-            },
-            options=[{"value": x, "label": x} 
-                 for x in discrete_col],
-            value='Pastel1'
-        ),   
-    ]
+            html.Div(
+                className="wrapper",
+                children=[
+                    html.Div([
+                        html.Label("X-axis"),
+                        dcc.Dropdown(
+                            id={
+                                'type': "correlations-attrib",
+                                'index': 0,
+                            },
+                            options=[{'label': generate_dropdown_label(a), 'value': a} for a in (
+                                categorical_attribs + quantitive_attribs)],
+                            searchable=False,
+                        ),
+                    ]),
+                    html.Div([
+                        html.Label("Y-axis"),
+                        dcc.Dropdown(
+                            id={
+                                'type': "correlations-attrib",
+                                'index': 1,
+                            },
+                            options=[{'label':  generate_dropdown_label(a), 
+                                    'value': a} for a in (
+                                categorical_attribs + quantitive_attribs)],
+                            searchable=False,
+                        ),
+                    ]),
+                    html.Div([
+                            html.Label("Graph Type"),
+                            dcc.Dropdown(
+                                id={'type': 'correlations-graph-type', 'index': 0}
+                            ),
+                    ]),
+                    html.Div([
+                        html.Label("Color Scale - Sequential"),
+                        dcc.Dropdown(
+                            id={
+                                'type': "correlations-colorscale-seq",
+                                'index': 0,
+                            },
+                            options=[{"value": x, "label": x} 
+                                for x in seq_cont_col],
+                            value='Reds'
+                            ),
+                    ]),
+                    html.Div([
+                        html.Label("Color Scale - Discrete"),
+                        dcc.Dropdown(
+                            id={
+                                'type': "correlations-colorscale-disc",
+                                'index': 0,
+                            },
+                            options=[{"value": x, "label": x} 
+                                for x in discrete_col],
+                            value='Pastel1'
+                        ),   
+                    ])
+                ]
+            )
+        ]
 
 def make_correlations_graphs(df, graph_type, attrib1, attrib2, corr_color_seq, corr_color_disc):
     # You can use: 
@@ -72,7 +89,6 @@ def make_correlations_graphs(df, graph_type, attrib1, attrib2, corr_color_seq, c
         return False
 
     df_temp = df.copy()
-
     # To check the type of attribute.
     if graph_type == 'parallel':   
         attributes_to_group = []
@@ -165,7 +181,34 @@ def correlation_graph_options(attribs):
             {'label': 'Histogram', 'value': 'histogram'}
         ], 'scatter'
 
-    return [], ''
+    return [], ""
+
+# @app.callback(
+#     [Output("attrib2-slider", "min"),
+#     Output("attrib2-slider", "max"),
+#     Output("attrib2-slider", "step"),
+#     Output("attrib2-slider", "value")],
+#     [Input({'type': 'correlations-attrib', 'index': 1}, 'value')], Input("hidden-data", "children"))
+# def callback_test(y_attribute, data_json):
+#     # print(data_json
+#     df = pd.read_json(data_json)
+#     print(y_attribute)
+#     # User has not select Y-axis yet
+#     if (isinstance(y_attribute, type(None))):
+#         return 0, 100, 1, 50
+
+#     min_value = df[y_attribute].min()
+#     max_value = df[y_attribute].max()
+#     median_value = df[y_attribute].median()
+#     print(min_value, max_value, median_value)
+#     return min_value, max_value, 1, median_value
+
+
+@app.callback(Output("indicator", "children"),
+              Input('attrib2-slider', 'value'))
+def display_value(value):
+    return 'Linear Value: {}'.format(value)
+
 
 # Method to generate list of time intervals for grouping accidents
 def generate_list_intervals(interval_size):

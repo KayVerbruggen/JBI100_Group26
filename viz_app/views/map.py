@@ -14,25 +14,36 @@ with urlopen('https://opendata.arcgis.com/datasets/61752cc924354e71846ffa044aa76
 
 def make_map_panel():
     return [
-        html.Label("Attribute"),
-        dcc.Dropdown(
-            id={
-                'type': "map-attrib",
-                'index': 0,
+        html.Div(
+            style={
+                "display": "flex",
+                "flex-direction": "column",
+                "gap": "16px",
             },
-            options=[{'label': generate_dropdown_label(a), 'value': a} for a in ['accident_count_per_capita', 'accident_count', 'fatality_rate']],
-        ),
-        html.Label("Color Scale - Sequential"),
-        dcc.Dropdown(
-            id={
-                'type': "map-colorscale-seq",
-                'index': 0,
-            },
-            options=[{"value": x, "label": x} 
-                 for x in seq_cont_col],
-            value='Reds'
-            ),
-    ]
+            children = [
+                html.Div([
+                    html.Label("Attribute"),
+                    dcc.Dropdown(
+                        id={
+                            'type': "map-attrib",
+                            'index': 0,
+                        },
+                        options=[{'label': generate_dropdown_label(a), 'value': a} for a in ['accident_count_per_capita', 'accident_count', 'fatality_rate']])
+                ]),
+                html.Div([
+                    html.Label("Color Scale - Sequential"),
+                    dcc.Dropdown(
+                        id={
+                            'type': "map-colorscale-seq",
+                            'index': 0,
+                        },
+                        options=[{"value": x, "label": x} 
+                            for x in seq_cont_col],
+                        value='Reds'
+                    )
+                ])
+            ]
+        )]
 
 def make_map_graphs(df, attrib, map_color_seq):
     if attrib == None:
