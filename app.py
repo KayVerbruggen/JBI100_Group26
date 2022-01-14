@@ -108,7 +108,7 @@ app.layout = html.Div(
     dash.dependencies.Output('rightColumn', 'style'), 
     dash.dependencies.Output('leftColumn', 'style'), 
     dash.dependencies.Input('url', 'pathname'))
-def redirect_to_vis(pathname):
+def show_hide_homepage(pathname):
     show = {'display': 'block'}
     hide = {'display': 'none'}
     if pathname in ['/map', '/correlations', '/trends']:

@@ -1,4 +1,5 @@
 import os
+import calendar
 from dash import html
 from dash import dcc
 import plotly.express as px
@@ -17,16 +18,32 @@ def make_trends_graphs(df, other_year, attrib, trends_color_disc):
     df_year2 = other_df[['date', 'accident_year', 'accident_severity']]
     processed_df = pd.concat([df_year1, df_year2], axis=0)
     # Look at only the month.
-    processed_df['date'] = processed_df['date'].str[3:5] 
+    #processed_df['date'] = processed_df['date'].str[3:5] 
 
     # Look day by day (doesn't handle Feb 29 properly)
-    #processed_df['date'] = processed_df['date'].str[3:6] + processed_df['date'].str[0:2]
+    processed_df['date'] = processed_df['date'].str[3:6] + processed_df['date'].str[0:2]
     if attrib == 'fatality_rate':
         processed_df = (processed_df[processed_df['accident_severity']==1].groupby(['date', 'accident_year']).size() \
                         / processed_df.groupby(['date', 'accident_year']).size()).reset_index(name='fatality_rate')    
     else:
         processed_df = processed_df.groupby(['date', 'accident_year']).size().reset_index(name='accident_count')
     
+    years = processed_df['accident_year'].unique()
+    if calendar.isleap(years[0]) and not calendar.isleap(years[1]):
+        processed_df = processed_df.append({
+                'accident_year': years[1], 
+                'date': '02/29', 
+            }, 
+            ignore_index=True)
+    elif not calendar.isleap(years[0]) and calendar.isleap(years[1]):
+        processed_df = processed_df.append({
+                'accident_year': years[0], 
+                'date': '02/29', 
+            }, 
+            ignore_index=True)
+
+    processed_df.sort_values('date', inplace=True)
+
     # Limits on Y axis are somewhat arbitray, but it looks fine for now.
     fig = px.line(processed_df, x='date', y=attrib, color='accident_year', 
                         markers=True, range_y=(0, processed_df[attrib].max()*1.1),
@@ -65,6 +82,7 @@ def make_trends_panel():
                             'index': 1,
                         },
                         options=[{'label': generate_dropdown_label(a), 'value': a} for a in ['fatality_rate', 'accident_count']],
+                        value='accident_count',
                     )
                 ]),
                 html.Div([
