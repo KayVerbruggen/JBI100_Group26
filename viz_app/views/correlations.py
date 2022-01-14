@@ -7,10 +7,11 @@ import pandas as pd
 from dash.dependencies import Input, Output, MATCH, ALL
 
 from viz_app.main import app
-from config import categorical_attribs, quantitive_attribs
+from config import categorical_attribs, quantitive_attribs, discrete_col, seq_cont_col
 def generate_dropdown_label(a):
     return a.replace("_", " ").title() + \
         (' (Categorical)' if a in categorical_attribs else ' (Quantative)')
+
 
 def make_correlations_panel():
     return [
@@ -39,9 +40,29 @@ def make_correlations_panel():
         dcc.Dropdown(
             id={'type': 'correlations-graph-type', 'index': 0}
         ),
+        html.Label("Color Scale - Sequential"),
+        dcc.Dropdown(
+            id={
+                'type': "correlations-colorscale-seq",
+                'index': 0,
+            },
+            options=[{"value": x, "label": x} 
+                 for x in seq_cont_col],
+            value='Reds'
+            ),
+        html.Label("Color Scale - Discrete"),
+        dcc.Dropdown(
+            id={
+                'type': "correlations-colorscale-disc",
+                'index': 0,
+            },
+            options=[{"value": x, "label": x} 
+                 for x in discrete_col],
+            value='Pastel1'
+        ),   
     ]
 
-def make_correlations_graphs(df, graph_type, attrib1, attrib2):
+def make_correlations_graphs(df, graph_type, attrib1, attrib2, corr_color_seq, corr_color_disc):
     # You can use: 
     # (attrib1 in categorical_attribs) and 
     # (attrib1 in quantitive_attribs)
@@ -68,7 +89,7 @@ def make_correlations_graphs(df, graph_type, attrib1, attrib2):
         final_df = pd.merge(df_temp, df_fatality, on=attributes_to_group)
 
         # Create parallel categories diagram
-        fig = px.parallel_categories(final_df, dimensions=attributes_to_group, color='fatality', color_continuous_scale=px.colors.sequential.Reds, height=800)
+        fig = px.parallel_categories(final_df, dimensions=attributes_to_group, color='fatality', color_continuous_scale=corr_color_seq, height=800)
         fig.update_layout(
         margin=dict(l=270, r=250, t=20, b=20),
         )
@@ -84,7 +105,7 @@ def make_correlations_graphs(df, graph_type, attrib1, attrib2):
 
         # Create new plot
         fig = px.scatter(df_fatal.reset_index() , x=attrib1, y=attrib2, height=800,
-            color="fatality_rate", color_continuous_scale="sunset")
+            color="fatality_rate", color_continuous_scale=corr_color_seq)
         fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))
         return [
             html.H5("Scatter Plot"),
@@ -97,7 +118,7 @@ def make_correlations_graphs(df, graph_type, attrib1, attrib2):
         df_fatal = calculate_fatality_rate(df_temp, attrib1)
         # Create the Histogram
         fig = px.histogram(df_fatal.reset_index(), x=attrib1, y=attrib2, height=800,
-                         color="fatality_rate" ,nbins=df[attrib1].unique().size)
+                         color="fatality_rate" ,nbins=df[attrib1].unique().size, color_discrete_sequence=corr_color_disc)
         fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))
         return [
             html.H5("Histogram"),

@@ -4,10 +4,10 @@ from dash import dcc
 import plotly.express as px
 import pandas as pd
 
-from config import categorical_attribs, quantitive_attribs
+from config import categorical_attribs, quantitive_attribs, discrete_col
 from viz_app.views.correlations import generate_dropdown_label
 
-def make_trends_graphs(df, other_year, attrib):
+def make_trends_graphs(df, other_year, attrib, trends_color_disc):
     if other_year == None or attrib == None:
         return
     other_df = pd.read_csv(
@@ -30,7 +30,7 @@ def make_trends_graphs(df, other_year, attrib):
     # Limits on Y axis are somewhat arbitray, but it looks fine for now.
     fig = px.line(processed_df, x='date', y=attrib, color='accident_year', 
                         markers=True, range_y=(0, processed_df[attrib].max()*1.1),
-                        labels={'date': 'Date (MM/DD)'})
+                        labels={'date': 'Date (MM/DD)'}, color_discrete_sequence=trends_color_disc)
     return [
         html.H5("Trend Graph"),
         dcc.Graph(figure=fig),
@@ -56,5 +56,15 @@ def make_trends_panel():
                 'index': 1,
             },
             options=[{'label': generate_dropdown_label(a), 'value': a} for a in ['fatality_rate', 'accident_count']],
+        ),
+        html.Label("Color Scale - Discrete"),
+        dcc.Dropdown(
+            id={
+                'type': "trends-colorscale-disc",
+                'index': 0,
+            },
+            options=[{"value": x, "label": x} 
+                 for x in discrete_col],
+            value='Pastel1'
         ),
     ]
