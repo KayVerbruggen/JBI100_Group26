@@ -44,6 +44,14 @@ app.layout = html.Div(
     ),
     dcc.Location(id='url', refresh=False),
     html.Div(
+        id="home-page",
+        className="ten columns",
+        children=[
+            html.H5("Visualization Tool by Group 26"),
+            html.P("Use the navigation bar above to select a visualization."),
+        ]
+    ),
+    html.Div(
         id="leftColumn",
         className="two columns",
         children=[
@@ -94,6 +102,19 @@ app.layout = html.Div(
     ),
 ])
 
+
+@ app.callback(dash.dependencies.Output('home-page', 'style'),
+    dash.dependencies.Output('filter-panel', 'style'), 
+    dash.dependencies.Output('rightColumn', 'style'), 
+    dash.dependencies.Output('leftColumn', 'style'), 
+    dash.dependencies.Input('url', 'pathname'))
+def redirect_to_vis(pathname):
+    show = {'display': 'block'}
+    hide = {'display': 'none'}
+    if pathname in ['/map', '/correlations', '/trends']:
+        return hide, show, show, show
+    
+    return show, hide, hide, hide
 
 # Changing the left panel based on the url
 @ app.callback(dash.dependencies.Output('panel-content', 'children'),
