@@ -8,7 +8,7 @@ import pandas as pd
 from dash.dependencies import Input, Output, MATCH, ALL
 
 from viz_app.main import app
-from config import categorical_attribs, quantitive_attribs, discrete_col, seq_cont_col
+from config import categorical_attribs, quantitive_attribs, discrete_col, seq_cont_col, SORT_ORDER_OPTIONS
 
 
 def generate_dropdown_label(a):
@@ -74,12 +74,24 @@ def make_correlations_panel():
                                 for x in discrete_col],
                             value='Pastel1'
                         ),   
+                    ]),
+                    html.Div([
+                        html.Label("Sort"),
+                        dcc.Dropdown(
+                            id={
+                                'type': "correlations-sorting-order",
+                                'index': 0,
+                            },
+                            options=[{"value": x, "label": x}
+                                     for x in SORT_ORDER_OPTIONS],
+                            value='None'
+                        ),
                     ])
                 ]
             )
         ]
 
-def make_correlations_graphs(df, graph_type, attrib1, attrib2, corr_color_seq, corr_color_disc):
+def make_correlations_graphs(df, graph_type, attrib1, attrib2, corr_color_seq, corr_color_disc, corr_sort_order):
     # You can use: 
     # (attrib1 in categorical_attribs) and 
     # (attrib1 in quantitive_attribs)
@@ -122,6 +134,9 @@ def make_correlations_graphs(df, graph_type, attrib1, attrib2, corr_color_seq, c
         # Create new plot
         fig = px.scatter(df_fatal.reset_index() , x=attrib1, y=attrib2, height=800,
             color="fatality_rate", color_continuous_scale=corr_color_seq)
+        fig = add_sort_order(fig, corr_sort_order)
+
+
         fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))
         return [
             html.H5("Scatter Plot"),
@@ -136,6 +151,7 @@ def make_correlations_graphs(df, graph_type, attrib1, attrib2, corr_color_seq, c
         fig = px.histogram(df_fatal.reset_index(), x=attrib1, y=attrib2, height=800,
                          color="fatality_rate" ,nbins=df[attrib1].unique().size, color_discrete_sequence=corr_color_disc)
         fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))
+        fig = add_sort_order(fig, corr_sort_order)
         return [
             html.H5("Histogram"),
             html.H6(attrib1 + " " + attrib2),
@@ -143,6 +159,17 @@ def make_correlations_graphs(df, graph_type, attrib1, attrib2, corr_color_seq, c
         ]
 
     return []
+
+# Helper function to set sorting order on graph
+def add_sort_order (fig, req_order) :
+    if req_order == SORT_ORDER_OPTIONS[1]:
+        fig.update_xaxes(categoryorder="total ascending")
+    elif req_order == SORT_ORDER_OPTIONS[2]:
+        fig.update_xaxes(categoryorder="total descending")
+    elif req_order == SORT_ORDER_OPTIONS[0]:
+        fig.update_xaxes(categoryorder="trace")
+    return fig
+
 
 def calculate_fatality_rate(df_temp,attrib1):
 

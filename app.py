@@ -15,7 +15,7 @@ from viz_app.views.correlations import make_correlations_panel, make_correlation
 from viz_app.views.trends import make_trends_panel, make_trends_graphs
 import config
 from config import ID_TO_LIGHT_CONDITIONS, ID_TO_JUNCTION_DETAIL, ID_TO_SPECIAL_CONDITIONS_AT_SITE, categorical_attribs, quantitive_attribs, \
-                   MISSING_VALUE_TABLE, ID_TO_JUNCTION_CONTROL, ID_TO_ROAD_SURFACE_CONDITIONS, ID_TO_SPECIAL_CONDITIONS_AT_SITE, discrete_col, seq_cont_col
+                   MISSING_VALUE_TABLE, ID_TO_JUNCTION_CONTROL, ID_TO_ROAD_SURFACE_CONDITIONS, ID_TO_SPECIAL_CONDITIONS_AT_SITE, discrete_col, seq_cont_col, SORT_ORDER_OPTIONS
 
 # This function joins the module and built-in palette name (discrete), e.g. px.colors.qualitative.Reds
 def get_disc_color(c):
@@ -202,18 +202,19 @@ def create_filter(n_clicks, filterSection):
                 Input({'type': 'correlations-attrib', 'index': ALL}, 'value'),
                 Input({'type': 'correlations-colorscale-seq', 'index': ALL}, 'value'),
                 Input({'type': 'correlations-colorscale-disc', 'index': ALL}, 'value'),
+                Input({'type': 'correlations-sorting-order', 'index': ALL}, 'value'),
 
                 # Trends Options
                 Input({'type': 'trends-attrib', 'index': ALL}, 'value'),
                 Input({'type': 'trends-colorscale-disc', 'index': ALL}, 'value'),
                 ])
 def display_graphs(pathname, year, map_attribs, map_color_seq, corr_type, corr_attribs, 
-                    corr_color_seq, corr_color_disc, trends_attribs, trends_color_disc):
+                    corr_color_seq, corr_color_disc, corr_sort_order, trends_attribs, trends_color_disc):
     df = get_data(year)
     if pathname == '/map':
         return make_map_graphs(df, map_attribs[0], get_seq_cont_color(map_color_seq[0]))
     elif pathname == '/correlations':
-        return make_correlations_graphs(df, corr_type[0], corr_attribs[0], corr_attribs[1], get_seq_cont_color(corr_color_seq[0]), get_disc_color(corr_color_disc[0]))
+        return make_correlations_graphs(df, corr_type[0], corr_attribs[0], corr_attribs[1], get_seq_cont_color(corr_color_seq[0]), get_disc_color(corr_color_disc[0]), corr_sort_order[0] )
     elif pathname == '/trends':
         return make_trends_graphs(df, trends_attribs[0], trends_attribs[1], get_disc_color(trends_color_disc[0]))
     else:

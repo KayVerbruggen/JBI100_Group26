@@ -117,6 +117,11 @@ quantitive_attribs = [
     'fatality_rate',
 ]
 
+SORT_ORDER_OPTIONS = [
+    'None',
+    'Ascending',
+    'Descending',
+]
 ID_TO_LIGHT_CONDITIONS = {
     1 : 'Daylight',
     4 : 'Darkness: street lights present and lit',
