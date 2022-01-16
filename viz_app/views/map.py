@@ -1,4 +1,3 @@
-from threading import local
 from dash import html
 from dash import dcc
 import plotly.express as px
