@@ -5,7 +5,7 @@ from dash import dcc
 import plotly.express as px
 import pandas as pd
 
-from config import categorical_attribs, quantitive_attribs, discrete_col
+from config import CATEGORICAL_ATTRIBS, QUANTITATIVE_ATTRIBS, DISCRETE_COL
 from viz_app.views.correlations import generate_dropdown_label
 
 def make_trends_graphs(df, other_year, attrib, trends_color_disc):
@@ -93,7 +93,7 @@ def make_trends_panel():
                             'index': 0,
                         },
                         options=[{"value": x, "label": x} 
-                            for x in discrete_col],
+                            for x in DISCRETE_COL],
                         value='Pastel1'
                     )])
                 ])

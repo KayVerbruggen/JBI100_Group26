@@ -12,7 +12,53 @@ MISSING_VALUE_TABLE = {
     "speed_limit": [-1, 660, 630],
 }
 
-discrete_col = {
+LIGHT_CONDITIONS = {
+    'Daylight',
+    'Darkness: street lights present and lit',
+    'Darkness: street lights present but unlit',
+    'Darkness: no street lighting',
+    'Darkness: street lighting unknown',
+}
+
+SPECIAL_CONDITIONS_AT_SITE = {
+    'None',
+    'Auto traffic signal out',
+    'Auto traffic signal partially defective',
+    'Permanent road signing or marking defective or obscured',
+    'Roadworks',
+    'Road surface defective',
+    'Oil or diesel',
+    'Mud',
+}
+
+ROAD_SURFACE_CONDITIONS = {
+    'Dry',
+    'Wet / Damp',
+    'Snow',
+    'Frost / Ice',
+    'Flood (surface water over 3cm deep)',
+}
+
+JUNCTION_CONTROL = {
+    'Authorised person',
+    'Automatic traffic signal',
+    'Stop sign', 
+    'Give way or uncontrolled',
+}
+
+JUNCTION_DETAIL = {
+    'Not at or within 20 metres of junction',
+    'Roundabout',
+    'Mini roundabout',
+    'T or staggered junction',
+    'Slip road',
+    'Crossroads',
+    'Junction more than four arms (not RAB)',
+    'Using private drive or entrance',
+    'Other junction',
+}
+
+DISCRETE_COL = {
     'Plotly',
     'D3',
     'G10',
@@ -34,7 +80,7 @@ discrete_col = {
     'Vivid',
 }
 
-seq_cont_col = {
+SEQ_CONT_COL = {
     'Plotly3',
     'Viridis',
     'Cividis',
@@ -102,7 +148,7 @@ seq_cont_col = {
     'Brwnyl'
 }
 
-categorical_attribs = [
+CATEGORICAL_ATTRIBS = [
     'speed_limit',
     'light_conditions',
     'junction_detail',
@@ -111,7 +157,7 @@ categorical_attribs = [
     'special_conditions_at_site',
 ]
 
-quantitive_attribs = [
+QUANTITATIVE_ATTRIBS = [
     'time',
     'accident_count',
     'fatality_rate',

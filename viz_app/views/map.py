@@ -3,7 +3,7 @@ from dash import dcc
 import plotly.express as px
 import pandas as pd
 
-from config import ID_TO_POLICE_FORCE_AREA, POPULATION_BY_POLICE_FORCE_AREA, categorical_attribs, quantitive_attribs, seq_cont_col
+from config import ID_TO_POLICE_FORCE_AREA, POPULATION_BY_POLICE_FORCE_AREA, CATEGORICAL_ATTRIBS, QUANTITATIVE_ATTRIBS, SEQ_CONT_COL
 
 from urllib.request import urlopen
 import json
@@ -38,7 +38,7 @@ def make_map_panel():
                             'index': 0,
                         },
                         options=[{"value": x, "label": x} 
-                            for x in seq_cont_col],
+                            for x in SEQ_CONT_COL],
                         value='Reds'
                     )
                 ])

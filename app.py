@@ -14,8 +14,8 @@ from viz_app.views.map import make_map_panel, make_map_graphs
 from viz_app.views.correlations import make_correlations_panel, make_correlations_graphs
 from viz_app.views.trends import make_trends_panel, make_trends_graphs
 import config
-from config import ID_TO_LIGHT_CONDITIONS, ID_TO_JUNCTION_DETAIL, ID_TO_SPECIAL_CONDITIONS_AT_SITE, categorical_attribs, quantitive_attribs, \
-                   MISSING_VALUE_TABLE, ID_TO_JUNCTION_CONTROL, ID_TO_ROAD_SURFACE_CONDITIONS, ID_TO_SPECIAL_CONDITIONS_AT_SITE, discrete_col, seq_cont_col, SORT_ORDER_OPTIONS
+from config import ID_TO_LIGHT_CONDITIONS, ID_TO_JUNCTION_DETAIL, ID_TO_SPECIAL_CONDITIONS_AT_SITE, CATEGORICAL_ATTRIBS, QUANTITATIVE_ATTRIBS, \
+                   MISSING_VALUE_TABLE, ID_TO_JUNCTION_CONTROL, ID_TO_ROAD_SURFACE_CONDITIONS, ID_TO_SPECIAL_CONDITIONS_AT_SITE, DISCRETE_COL, SEQ_CONT_COL, SORT_ORDER_OPTIONS
 
 # This function joins the module and built-in palette name (discrete), e.g. px.colors.qualitative.Reds
 def get_disc_color(c):
@@ -138,7 +138,7 @@ def display_options(pathname):
 def add_filter_option(attrib, id, year):
     # Dynamically create filter option based on the selected attribute type (i.e. Categorical)
     df = get_data(year)
-    if (attrib in quantitive_attribs):
+    if (attrib in QUANTITATIVE_ATTRIBS):
         print(attrib)
         column = df[attrib]
         val_min = column.min()
@@ -150,7 +150,7 @@ def add_filter_option(attrib, id, year):
                  0: {'label': val_min},
                  100: {"label": val_max}
              })
-    elif (attrib in categorical_attribs):
+    elif (attrib in CATEGORICAL_ATTRIBS):
         # TODO: Add checkboxes
         return html.Div(id={"type": "filter-action", "index": id["index"]}, children=[])
 
@@ -171,7 +171,7 @@ def create_filter(n_clicks, filterSection):
                         'index': n_clicks,
                     },
                     options=[{'label': generate_dropdown_label(a), 'value': a} for a in (
-                        categorical_attribs + quantitive_attribs)],
+                        CATEGORICAL_ATTRIBS + QUANTITATIVE_ATTRIBS)],
                     searchable=False,
                 ),
                 html.Div(
@@ -203,18 +203,18 @@ def create_filter(n_clicks, filterSection):
                 Input({'type': 'correlations-colorscale-seq', 'index': ALL}, 'value'),
                 Input({'type': 'correlations-colorscale-disc', 'index': ALL}, 'value'),
                 Input({'type': 'correlations-sorting-order', 'index': ALL}, 'value'),
-
+                Input({'type': 'correlations-attrib-filter', 'index': ALL}, 'value'),
                 # Trends Options
                 Input({'type': 'trends-attrib', 'index': ALL}, 'value'),
                 Input({'type': 'trends-colorscale-disc', 'index': ALL}, 'value'),
                 ])
 def display_graphs(pathname, year, map_attribs, map_color_seq, corr_type, corr_attribs, 
-                    corr_color_seq, corr_color_disc, corr_sort_order, trends_attribs, trends_color_disc):
+                    corr_color_seq, corr_color_disc, corr_sort_order, filter_val, trends_attribs, trends_color_disc):
     df = get_data(year)
     if pathname == '/map':
         return make_map_graphs(df, map_attribs[0], get_seq_cont_color(map_color_seq[0]))
     elif pathname == '/correlations':
-        return make_correlations_graphs(df, corr_type[0], corr_attribs[0], corr_attribs[1], get_seq_cont_color(corr_color_seq[0]), get_disc_color(corr_color_disc[0]), corr_sort_order[0] )
+        return make_correlations_graphs(df, corr_type[0], corr_attribs[0], corr_attribs[1], get_seq_cont_color(corr_color_seq[0]), get_disc_color(corr_color_disc[0]), corr_sort_order[0], filter_val[0], filter_val[1])
     elif pathname == '/trends':
         return make_trends_graphs(df, trends_attribs[0], trends_attribs[1], get_disc_color(trends_color_disc[0]))
     else:
