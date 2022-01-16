@@ -141,7 +141,7 @@ def make_correlations_graphs(df, graph_type, attrib1, attrib2, corr_color_seq, c
         # depending on the combination of the attributes, filters are applied 
         if (filterx == '' and filtery == ''):        
             df_to_use = final_df
-        if (filterx != '' and filtery == ''):
+        elif (filterx != '' and filtery == ''):
             final_df_filtered = final_df[(final_df[attrib1].isin(filterx))]
             df_to_use = final_df_filtered
         elif (filterx == '' and filtery != ''):
