@@ -212,7 +212,7 @@ def display_graphs(pathname, year, map_attribs, map_color_seq, corr_type, corr_a
                     corr_color_seq, corr_color_disc, corr_sort_order, filter_val, trends_attribs, trends_color_disc):
     df = get_data(year)
     if pathname == '/map':
-        return make_map_graphs(df, map_attribs[0], get_seq_cont_color(map_color_seq[0]))
+        return make_map_graphs(df, map_attribs[0], map_attribs[1], get_seq_cont_color(map_color_seq[0]))
     elif pathname == '/correlations':
         return make_correlations_graphs(df, corr_type[0], corr_attribs[0], corr_attribs[1], get_seq_cont_color(corr_color_seq[0]), get_disc_color(corr_color_disc[0]), corr_sort_order[0], filter_val[0], filter_val[1])
     elif pathname == '/trends':
