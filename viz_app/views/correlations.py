@@ -47,12 +47,6 @@ def make_correlations_panel():
                     ),
                 ]),
                 html.Div([
-                    html.Label("Graph Type"),
-                    dcc.Dropdown(
-                        id={'type': 'correlations-graph-type', 'index': 0}
-                    ),
-                ]),
-                html.Div([
                     html.Label("Color Scale - Sequential"),
                     dcc.Dropdown(
                         id={
@@ -93,7 +87,7 @@ def make_correlations_panel():
     ]
 
 
-def make_correlations_graphs(df, graph_type, attrib1, attrib2, corr_color_seq, corr_color_disc, corr_sort_order):
+def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_disc, corr_sort_order):
     # You can use:
     # (attrib1 in categorical_attribs) and
     # (attrib1 in quantitive_attribs)
@@ -143,7 +137,7 @@ def make_correlations_graphs(df, graph_type, attrib1, attrib2, corr_color_seq, c
         fig = px.scatter(df_fatal.reset_index(), x=attrib1, y=attrib2, height=800,
                          color="fatality_rate", color_continuous_scale=corr_color_seq)
         fig = add_sort_order(fig, corr_sort_order)
-        fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))
+        fig.update_traces(marker=dict(size=20), selector=dict(mode='markers'))
 
         # Create the Histogram
         fig2 = px.histogram(df_fatal.reset_index(), x=attrib1, y=attrib2, height=800,
@@ -212,29 +206,6 @@ def calculate_fatality_rate(df_temp, attrib1):
     return df_fatal
 
 
-# Changing the correlations panel
-@app.callback([Output({'type': 'correlations-graph-type', 'index': 0}, 'options'),
-               Output({'type': 'correlations-graph-type', 'index': 0}, 'value')],
-              [Input({'type': 'correlations-attrib', 'index': ALL}, 'value')])
-def correlation_graph_options(attribs):
-    attrib1, attrib2 = attribs[0], attribs[1]
-
-    # Both categorical
-    if (attrib1 in categorical_attribs and attrib2 in categorical_attribs):
-        return [{'label': 'Parallel category diagram', 'value': 'parallel'}], 'parallel'
-
-    # Both quantitive
-    if (attrib1 in quantitive_attribs and attrib2 in quantitive_attribs):
-        return [{'label': 'Scatter plot', 'value': 'scatter'}], 'scatter'
-
-    # One of each
-    if (attrib1 in quantitive_attribs) != (attrib2 in quantitive_attribs):
-        return [
-                   {'label': 'Scatter plot', 'value': 'scatter'},
-                   {'label': 'Histogram', 'value': 'histogram'}
-               ], 'scatter'
-
-    return [], ""
 
 
 # @app.callback(
@@ -262,9 +233,6 @@ def correlation_graph_options(attribs):
               Input('attrib2-slider', 'value'))
 def display_value(value):
     return 'Linear Value: {}'.format(value)
-
-
-
 
 
 # Method to generate list of time intervals for grouping accidents

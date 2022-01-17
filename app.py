@@ -213,7 +213,6 @@ if __name__ == '__main__':
                    Input({'type': 'map-colorscale-seq', 'index': ALL}, 'value'),
 
                    # Correlations Options
-                   Input({'type': 'correlations-graph-type', 'index': ALL}, 'value'),
                    Input({'type': 'correlations-attrib', 'index': ALL}, 'value'),
                    Input({'type': 'correlations-colorscale-seq', 'index': ALL}, 'value'),
                    Input({'type': 'correlations-colorscale-disc', 'index': ALL}, 'value'),
@@ -223,17 +222,20 @@ if __name__ == '__main__':
                    Input({'type': 'trends-attrib', 'index': ALL}, 'value'),
                    Input({'type': 'trends-colorscale-disc', 'index': ALL}, 'value'),
                    ])
-    def display_graphs(pathname, year, map_attribs, map_color_seq, corr_type, corr_attribs,
+    def display_graphs(pathname, year, map_attribs, map_color_seq, corr_attribs,
                        corr_color_seq, corr_color_disc, corr_sort_order, trends_attribs, trends_color_disc):
         df = get_data(year)
         if pathname == '/map':
             return make_map_graphs(df, map_attribs[0], get_seq_cont_color(map_color_seq[0]))
         elif pathname == '/correlations':
-            temp_data = make_correlations_graphs(df, corr_type[0], corr_attribs[0], corr_attribs[1],
+            temp_data = make_correlations_graphs(df, corr_attribs[0], corr_attribs[1],
                                                  get_seq_cont_color(corr_color_seq[0]),
                                                  get_disc_color(corr_color_disc[0]), corr_sort_order[0])
-            storage.update(temp_data["dataframe"])
-            return temp_data['children']
+            if temp_data:
+                storage.update(temp_data["dataframe"])
+                return temp_data['children']
+            return temp_data
+
         elif pathname == '/trends':
             return make_trends_graphs(df, trends_attribs[0], trends_attribs[1], get_disc_color(trends_color_disc[0]))
         else:
@@ -242,40 +244,34 @@ if __name__ == '__main__':
 
 
     @app.callback(
-        Output("g1", "figure"), [
+        Output("g1", "figure"),[
+            Input("g1", "figure"),
             Input("g2", 'selectedData'),
             Input({'type': 'correlations-attrib', 'index': ALL}, 'value'),
             Input({'type': 'correlations-colorscale-seq', 'index': ALL}, 'value'),
         ])
-    def update_scatter(selected_data, corr_atrib, color_seq):
+    def update_scatter(orig_fig, selected_data, corr_atrib, color_seq):
         if selected_data is not None:
-            return update_figure_scatter(storage.get(), corr_atrib[0], corr_atrib[1], selected_data, color_seq)
+            return update_figure_scatter(storage.get(), corr_atrib[0], corr_atrib[1], selected_data, color_seq[0])
+        return orig_fig
 
 
     @app.callback(
         Output("g2", "figure"), [
+            Input("g2", 'figure'),
             Input("g1", 'selectedData'),
             Input({'type': 'correlations-attrib', 'index': ALL}, 'value'),
             Input({'type': 'correlations-colorscale-disc', 'index': ALL}, 'value'),
         ])
-    def update_histogram( selected_data, corr_atrib, color_disc):
+    def update_histogram(orig_fig, selected_data, corr_atrib, color_disc):
         if selected_data is not None:
-            return update_figure_histogram(storage.get(), corr_atrib[0], corr_atrib[1], selected_data, color_disc)
+            return update_figure_histogram(storage.get(), corr_atrib[0], corr_atrib[1], selected_data, get_disc_color(color_disc[0]))
+        return orig_fig
 
 
     def update_figure_scatter(df, attrib1, attrib2, selectedpoints, corr_color_seq):
-
-        fig = go.Figure()
-
-        x_values = df[attrib1]
-        y_values = df[attrib2]
-        fig.add_trace(go.Scatter(
-            x=x_values,
-            y=y_values,
-            mode='markers',
-            marker_color='rgb(200,200,200)'
-        ))
-        fig.update_traces(mode='markers', marker_size=10)
+        fig = px.scatter(x=df.index, y=df[attrib2], color=df['fatality_rate'], height=800,
+                         color_continuous_scale=corr_color_seq)
         fig.update_layout(
             yaxis_zeroline=False,
             xaxis_zeroline=False,
@@ -289,19 +285,21 @@ if __name__ == '__main__':
             selected_index = df.index  # show all
         else:
             selected_index = [  # show only selected indices
-                x.get('pointIndex', None)
-                for x in selectedpoints['points']
+                point['curveNumber']
+                for point in selectedpoints['points']
             ]
 
-        fig.data[0].update(
+        fig.update_traces(
+            mode='markers',
+            marker_size=20,
+            #Selected indexes
             selectedpoints=selected_index,
-
             # color of selected points
-            selected=dict(marker=dict(color='rgb(255,0,0)')),
-
+            selected=dict(marker=dict(opacity=1.0)),
             # color of unselected pts
-            unselected=dict(marker=dict(color='rgb(200,200,200)', opacity=0.9))
+            unselected=dict(marker=dict(opacity=0.2))
         )
+
 
         # update axis titles
         fig.update_layout(
@@ -309,25 +307,51 @@ if __name__ == '__main__':
             yaxis_title=attrib2,
         )
 
-        #fig = px.scatter(df.reset_index(), x=attrib1, y=attrib2, height=800,
-         #                color="fatality_rate", color_continuous_scale='Inferno')
-        #fig.update_traces(selectedpoints=selectedpoints,
-        #                  customdata=df.index,
-        #                  mode='markers', marker={'color': 'rgba(0, 116, 217, 0.7)', 'size': 20},
-        #                  unselected={'marker': {'opacity': 0.3}, 'textfont': {'color': 'rgba(0, 0, 0, 0)'}})
-        #fig.update_layout(dragmode='select', hovermode=False)
-
         return fig
 
 
     def update_figure_histogram(df, attrib1, attrib2, selectedpoints, corr_color_disc):
-        fig = px.histogram(df.reset_index(), x=attrib1, y=attrib2, height=800,
-                            color="fatality_rate", nbins=df[attrib1].unique().size,
-                            color_discrete_sequence='Plotly')
-        fig.update_traces(mode='markers', marker_size=10)
-        fig.update_layout(dragmode='select', hovermode=False)
-        fig.data[0].update(selectedpoints=selectedpoints, selected=dict(marker=dict(color='rgb(255,0,0)')),
-        unselected=dict(marker=dict(color='rgb(200,200,200)', opacity=0.9)))
+        fig = px.histogram(x=df.index, y=df[attrib2], color=df['fatality_rate'], height=800,
+                           nbins=df.index.unique().size, color_discrete_sequence=corr_color_disc)
+
+        fig.update_layout(
+            yaxis_zeroline=False,
+            xaxis_zeroline=False,
+            dragmode='select'
+        )
+        fig.update_xaxes(fixedrange=True)
+        fig.update_yaxes(fixedrange=True)
+
+        # highlight points with selection other graph
+        if selectedpoints is None:
+            selected_index = df.index  # show all
+        else:
+            selected_index = [  # show only selected indices
+                point['pointIndex']
+                for point in selectedpoints['points']
+            ]
+
+        fig.update_traces(
+            # color of selected points
+            selected=dict(marker=dict(opacity=1.0)),
+            # color of unselected pts
+            unselected=dict(marker=dict(opacity=0.2))
+        )
+
+        current_indexes = [ x for x in range( len(fig.data) ) ]
+        unselected_indexes = [x for x in current_indexes if x not in selected_index]
+
+        for point in unselected_indexes:
+            fig.data[point].update(
+                selectedpoints=selected_index
+            )
+
+        # update axis titles
+        fig.update_layout(
+            xaxis_title=attrib1,
+            yaxis_title=attrib2,
+        )
+
         return fig
 
 
