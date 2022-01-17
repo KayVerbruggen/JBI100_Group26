@@ -175,13 +175,13 @@ def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_di
             df_to_use = final_df_filtered
 
         # Create new plot
-        fig = px.scatter(df_fatal , x=attrib1, y=attrib2, height=800,
+        fig = px.scatter(df_to_use , x=attrib1, y=attrib2, height=800,
             color="fatality_rate", color_continuous_scale=corr_color_seq)
         fig = add_sort_order(fig, corr_sort_order)
         fig.update_traces(marker=dict(size=20), selector=dict(mode='markers'))
 
         # Create the Histogram
-        fig2 = px.histogram(df_fatal, x=attrib1, y=attrib2, height=800,
+        fig2 = px.histogram(df_to_use, x=attrib1, y=attrib2, height=800,
                             color="fatality_rate", nbins=df[attrib1].unique().size,
                             color_discrete_sequence=corr_color_disc)
         fig2 = add_sort_order(fig2, corr_sort_order)
@@ -212,7 +212,7 @@ def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_di
                 html.H6(attrib1 + " " + attrib2),
                 dcc.Graph(id='g1', figure=fig),
             ],
-            "dataframe" : df_fatal
+            "dataframe" : df_to_use
         }
 
     return  {
