@@ -213,14 +213,14 @@ def create_filter(n_clicks, filterSection):
                Input({'type': 'trends-colorscale-disc', 'index': ALL}, 'value'),
                ])
 def display_graphs(pathname, year, map_attribs, map_color_seq, corr_attribs,
-                   corr_color_seq, corr_color_disc, corr_sort_order, trends_attribs, trends_color_disc):
+                   corr_color_seq, corr_color_disc, corr_sort_order, filter_val, trends_attribs, trends_color_disc):
     df = get_data(year)
     if pathname == '/map':
         return make_map_graphs(df, map_attribs[0], map_attribs[1], get_seq_cont_color(map_color_seq[0]))
     elif pathname == '/correlations':
         temp_data = make_correlations_graphs(df, corr_attribs[0], corr_attribs[1],
                                              get_seq_cont_color(corr_color_seq[0]),
-                                             get_disc_color(corr_color_disc[0]), corr_sort_order[0])
+                                             get_disc_color(corr_color_disc[0]), corr_sort_order[0], filter_val[0], filter_val[1])
         if temp_data:
             storage.update(temp_data["dataframe"])
             return temp_data['children']
@@ -260,7 +260,7 @@ def update_histogram(orig_fig, selected_data, corr_atrib, color_disc):
 
 
 def update_figure_scatter(df, attrib1, attrib2, selectedpoints, corr_color_seq):
-    fig = px.scatter(x=df.index, y=df[attrib2], color=df['fatality_rate'], height=800,
+    fig = px.scatter(x=df[attrib1], y=df[attrib2], color=df['fatality_rate'], height=800,
                      color_continuous_scale=corr_color_seq)
     fig.update_layout(
         yaxis_zeroline=False,
@@ -301,7 +301,7 @@ def update_figure_scatter(df, attrib1, attrib2, selectedpoints, corr_color_seq):
 
 
 def update_figure_histogram(df, attrib1, attrib2, selectedpoints, corr_color_disc):
-    fig = px.histogram(x=df.index, y=df[attrib2], color=df['fatality_rate'], height=800,
+    fig = px.histogram(x=df[attrib1], y=df[attrib2], color=df['fatality_rate'], height=800,
                        nbins=df.index.unique().size, color_discrete_sequence=corr_color_disc)
 
     fig.update_layout(

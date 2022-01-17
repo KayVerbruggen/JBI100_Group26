@@ -121,7 +121,7 @@ def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_di
     # To check the type of attribute.
     if (attrib1 in CATEGORICAL_ATTRIBS and attrib2 in CATEGORICAL_ATTRIBS):
         attributes_to_group = []
-       
+
         # if chosen attributes are the same, show only one
         if attrib1 == attrib2:
             attributes_to_group.append(attrib1)
@@ -134,6 +134,7 @@ def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_di
                 attributes_to_group).count()).rename(columns={'accident_severity': 'fatality'})
         # Join df_temp and df_fatality on the chosen features
         final_df = pd.merge(df_temp, df_fatality, on=attributes_to_group)
+        df_to_use = final_df
 
         # depending on the combination of the attributes, filters are applied
         if (filterx == '' and filtery == ''):
@@ -164,7 +165,7 @@ def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_di
 
     if (attrib1 in QUANTITATIVE_ATTRIBS) != (attrib2 in QUANTITATIVE_ATTRIBS):
         df_fatal = calculate_fatality_rate(df_temp, attrib1).reset_index()
-
+        df_to_use = df_fatal
         # depending on the combination of the attributes, filters are applied
         # Only attrib1 is considered, since this one is the only categorical attribute
         if (filterx == '' and filtery == ''):
@@ -173,15 +174,14 @@ def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_di
             final_df_filtered = df_fatal[(df_fatal[attrib1].isin(filterx))]
             df_to_use = final_df_filtered
 
-        df_fatal = calculate_fatality_rate(df_temp, attrib1)
         # Create new plot
-        fig = px.scatter(df_to_use , x=attrib1, y=attrib2, height=800,
+        fig = px.scatter(df_fatal , x=attrib1, y=attrib2, height=800,
             color="fatality_rate", color_continuous_scale=corr_color_seq)
         fig = add_sort_order(fig, corr_sort_order)
         fig.update_traces(marker=dict(size=20), selector=dict(mode='markers'))
 
         # Create the Histogram
-        fig2 = px.histogram(df_to_use, x=attrib1, y=attrib2, height=800,
+        fig2 = px.histogram(df_fatal, x=attrib1, y=attrib2, height=800,
                             color="fatality_rate", nbins=df[attrib1].unique().size,
                             color_discrete_sequence=corr_color_disc)
         fig2 = add_sort_order(fig2, corr_sort_order)
@@ -194,7 +194,7 @@ def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_di
                 dcc.Graph(id='g1', figure=fig),
                 dcc.Graph(id='g2', figure=fig2)
             ],
-            "dataframe" : df_to_use
+            "dataframe" : df_fatal
         }
 
     if (attrib1 in QUANTITATIVE_ATTRIBS and attrib2 in QUANTITATIVE_ATTRIBS):
@@ -268,6 +268,43 @@ def calculate_fatality_rate(df_temp, attrib1):
 #     median_value = df[y_attribute].median()
 #     print(min_value, max_value, median_value)
 #     return min_value, max_value, 1, median_value
+
+# Changing X-axis filter dropdown based on attribute chosen for X-axis
+@app.callback([Output({'type': 'correlations-attrib-filter', 'index': 0}, 'options'),
+                Output({'type': 'correlations-attrib-filter', 'index': 0}, 'value')],
+              [Input({'type':'correlations-attrib', 'index': ALL}, 'value')])
+def test(attribs):
+    attrib1 = attribs[0]
+    if attrib1 == "light_conditions":
+        return [{'label': x, 'value': x} for x in LIGHT_CONDITIONS], ''
+    if attrib1 == "special_conditions_at_site":
+        return [{'label': x, 'value': x} for x in SPECIAL_CONDITIONS_AT_SITE], ''
+    if attrib1 == "road_surface_conditions":
+        return [{'label': x, 'value': x} for x in ROAD_SURFACE_CONDITIONS], ''
+    if attrib1 == "junction_control":
+        return [{'label': x, 'value': x} for x in JUNCTION_CONTROL], ''
+    if attrib1 == "junction_detail":
+        return [{'label': x, 'value': x} for x in JUNCTION_DETAIL], ''
+    return [], ''
+
+# Changing Y-axis filter dropdown based on attribute chosen for Y-axis
+@app.callback([Output({'type': 'correlations-attrib-filter', 'index': 1}, 'options'),
+                Output({'type': 'correlations-attrib-filter', 'index': 1}, 'value')],
+              [Input({'type':'correlations-attrib', 'index': ALL}, 'value')])
+def test2(attribs):
+    attrib2 = attribs[1]
+    if attrib2 == "light_conditions":
+        return [{'label': x, 'value': x} for x in LIGHT_CONDITIONS], ''
+    if attrib2 == "special_conditions_at_site":
+        return [{'label': x, 'value': x} for x in SPECIAL_CONDITIONS_AT_SITE], ''
+    if attrib2 == "road_surface_conditions":
+        return [{'label': x, 'value': x} for x in ROAD_SURFACE_CONDITIONS], ''
+    if attrib2 == "junction_control":
+        return [{'label': x, 'value': x} for x in JUNCTION_CONTROL], ''
+    if attrib2 == "junction_detail":
+        return [{'label': x, 'value': x} for x in JUNCTION_DETAIL], ''
+    return [], ''
+
 
 
 @app.callback(Output("indicator", "children"),
