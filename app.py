@@ -10,12 +10,15 @@ import datetime
 from dash.dependencies import Input, Output, MATCH, ALL, State
 
 from viz_app.main import app
+from viz_app.storage import Storage
 from viz_app.views.map import make_map_panel, make_map_graphs
 from viz_app.views.correlations import make_correlations_panel, make_correlations_graphs
 from viz_app.views.trends import make_trends_panel, make_trends_graphs
 import config
 from config import ID_TO_LIGHT_CONDITIONS, ID_TO_JUNCTION_DETAIL, ID_TO_SPECIAL_CONDITIONS_AT_SITE, CATEGORICAL_ATTRIBS, QUANTITATIVE_ATTRIBS, \
                    MISSING_VALUE_TABLE, ID_TO_JUNCTION_CONTROL, ID_TO_ROAD_SURFACE_CONDITIONS, ID_TO_SPECIAL_CONDITIONS_AT_SITE, DISCRETE_COL, SEQ_CONT_COL, SORT_ORDER_OPTIONS
+
+storage = Storage({})
 
 # This function joins the module and built-in palette name (discrete), e.g. px.colors.qualitative.Reds
 def get_disc_color(c):
@@ -117,8 +120,8 @@ def show_hide_homepage(pathname):
     return show, hide, hide, hide
 
 # Changing the left panel based on the url
-@ app.callback(dash.dependencies.Output('panel-content', 'children'),
-               [dash.dependencies.Input('url', 'pathname')])
+@app.callback(dash.dependencies.Output('panel-content', 'children'),
+              [dash.dependencies.Input('url', 'pathname')])
 def display_options(pathname):
     if pathname == '/map':
         return make_map_panel()
@@ -132,9 +135,9 @@ def display_options(pathname):
 
 # This is a onClick handler for adding a filter option to a selected attribute
 @app.callback(Output({"type": "filter-attribute-action", "index": MATCH}, "children"),
-    Input({"type": "filter-attribute-dropdown", "index": MATCH}, "value"),
-    State({"type": "filter-attribute-action", "index": MATCH}, 'id'),
-    State("dataset-year", "value"))
+              Input({"type": "filter-attribute-dropdown", "index": MATCH}, "value"),
+              State({"type": "filter-attribute-action", "index": MATCH}, 'id'),
+              State("dataset-year", "value"))
 def add_filter_option(attrib, id, year):
     # Dynamically create filter option based on the selected attribute type (i.e. Categorical)
     df = get_data(year)
@@ -155,7 +158,8 @@ def add_filter_option(attrib, id, year):
         return html.Div(id={"type": "filter-action", "index": id["index"]}, children=[])
 
 # This is a onClick handler for creating new attribute filter
-@app.callback(Output("filter-section", "children"), Input("btn-add-filter", "n_clicks"), State("filter-section", "children"))
+@app.callback(Output("filter-section", "children"), Input("btn-add-filter", "n_clicks"),
+              State("filter-section", "children"))
 def create_filter(n_clicks, filterSection):
     filterSection.append(
         html.Div(
@@ -179,7 +183,7 @@ def create_filter(n_clicks, filterSection):
                         'type': "filter-attribute-action",
                         'index': n_clicks,
                     },
-                    children = []
+                    children=[]
                 )
             ]
         )
@@ -189,37 +193,157 @@ def create_filter(n_clicks, filterSection):
 
 
 # Changing the right panel based on the url
-@ app.callback(dash.dependencies.Output('graph-content', 'children'),
-               [Input('url', 'pathname'),
-                Input('dataset-year', 'value'),
-                
-                # Map Options
-                Input({'type': 'map-attrib', 'index': ALL}, 'value'),
-                Input({'type': 'map-colorscale-seq', 'index': ALL}, 'value'),
+@app.callback(dash.dependencies.Output('graph-content', 'children'),
+              [Input('url', 'pathname'),
+               Input('dataset-year', 'value'),
 
-                # Correlations Options
-                Input({'type': 'correlations-graph-type', 'index': ALL}, 'value'),
-                Input({'type': 'correlations-attrib', 'index': ALL}, 'value'),
-                Input({'type': 'correlations-colorscale-seq', 'index': ALL}, 'value'),
-                Input({'type': 'correlations-colorscale-disc', 'index': ALL}, 'value'),
-                Input({'type': 'correlations-sorting-order', 'index': ALL}, 'value'),
-                Input({'type': 'correlations-attrib-filter', 'index': ALL}, 'value'),
-                # Trends Options
-                Input({'type': 'trends-attrib', 'index': ALL}, 'value'),
-                Input({'type': 'trends-colorscale-disc', 'index': ALL}, 'value'),
-                ])
-def display_graphs(pathname, year, map_attribs, map_color_seq, corr_type, corr_attribs, 
-                    corr_color_seq, corr_color_disc, corr_sort_order, filter_val, trends_attribs, trends_color_disc):
+               # Map Options
+               Input({'type': 'map-attrib', 'index': ALL}, 'value'),
+               Input({'type': 'map-colorscale-seq', 'index': ALL}, 'value'),
+
+               # Correlations Options
+               Input({'type': 'correlations-attrib', 'index': ALL}, 'value'),
+               Input({'type': 'correlations-colorscale-seq', 'index': ALL}, 'value'),
+               Input({'type': 'correlations-colorscale-disc', 'index': ALL}, 'value'),
+               Input({'type': 'correlations-sorting-order', 'index': ALL}, 'value'),
+               Input({'type': 'correlations-attrib-filter', 'index': ALL}, 'value'),
+
+               # Trends Options
+               Input({'type': 'trends-attrib', 'index': ALL}, 'value'),
+               Input({'type': 'trends-colorscale-disc', 'index': ALL}, 'value'),
+               ])
+def display_graphs(pathname, year, map_attribs, map_color_seq, corr_attribs,
+                   corr_color_seq, corr_color_disc, corr_sort_order, filter_val, trends_attribs, trends_color_disc):
     df = get_data(year)
     if pathname == '/map':
         return make_map_graphs(df, map_attribs[0], map_attribs[1], get_seq_cont_color(map_color_seq[0]))
     elif pathname == '/correlations':
-        return make_correlations_graphs(df, corr_type[0], corr_attribs[0], corr_attribs[1], get_seq_cont_color(corr_color_seq[0]), get_disc_color(corr_color_disc[0]), corr_sort_order[0], filter_val[0], filter_val[1])
+        temp_data = make_correlations_graphs(df, corr_attribs[0], corr_attribs[1],
+                                             get_seq_cont_color(corr_color_seq[0]),
+                                             get_disc_color(corr_color_disc[0]), corr_sort_order[0], filter_val[0], filter_val[1])
+        if temp_data:
+            storage.update(temp_data["dataframe"])
+            return temp_data['children']
+        return temp_data
+
     elif pathname == '/trends':
         return make_trends_graphs(df, trends_attribs[0], trends_attribs[1], get_disc_color(trends_color_disc[0]))
     else:
         return []
     # You could also return a 404 "URL not found" page here
+
+
+@app.callback(
+    Output("g1", "figure"),[
+        Input("g1", "figure"),
+        Input("g2", 'selectedData'),
+        Input({'type': 'correlations-attrib', 'index': ALL}, 'value'),
+        Input({'type': 'correlations-colorscale-seq', 'index': ALL}, 'value'),
+    ])
+def update_scatter(orig_fig, selected_data, corr_atrib, color_seq):
+    if selected_data is not None:
+        return update_figure_scatter(storage.get(), corr_atrib[0], corr_atrib[1], selected_data, color_seq[0])
+    return orig_fig
+
+
+@app.callback(
+    Output("g2", "figure"), [
+        Input("g2", 'figure'),
+        Input("g1", 'selectedData'),
+        Input({'type': 'correlations-attrib', 'index': ALL}, 'value'),
+        Input({'type': 'correlations-colorscale-disc', 'index': ALL}, 'value'),
+    ])
+def update_histogram(orig_fig, selected_data, corr_atrib, color_disc):
+    if selected_data is not None:
+        return update_figure_histogram(storage.get(), corr_atrib[0], corr_atrib[1], selected_data, get_disc_color(color_disc[0]))
+    return orig_fig
+
+
+def update_figure_scatter(df, attrib1, attrib2, selectedpoints, corr_color_seq):
+    fig = px.scatter(x=df[attrib1], y=df[attrib2], color=df['fatality_rate'], height=800,
+                     color_continuous_scale=corr_color_seq)
+    fig.update_layout(
+        yaxis_zeroline=False,
+        xaxis_zeroline=False,
+        dragmode='select'
+    )
+    fig.update_xaxes(fixedrange=True)
+    fig.update_yaxes(fixedrange=True)
+
+    # highlight points with selection other graph
+    if selectedpoints is None:
+        selected_index = df.index  # show all
+    else:
+        selected_index = [  # show only selected indices
+            point['curveNumber']
+            for point in selectedpoints['points']
+        ]
+
+    fig.update_traces(
+        mode='markers',
+        marker_size=20,
+        #Selected indexes
+        selectedpoints=selected_index,
+        # color of selected points
+        selected=dict(marker=dict(opacity=1.0)),
+        # color of unselected pts
+        unselected=dict(marker=dict(opacity=0.2))
+    )
+
+
+    # update axis titles
+    fig.update_layout(
+        xaxis_title=attrib1,
+        yaxis_title=attrib2,
+    )
+
+    return fig
+
+
+def update_figure_histogram(df, attrib1, attrib2, selectedpoints, corr_color_disc):
+    fig = px.histogram(x=df[attrib1], y=df[attrib2], color=df['fatality_rate'], height=800,
+                       nbins=df.index.unique().size, color_discrete_sequence=corr_color_disc)
+
+    fig.update_layout(
+        yaxis_zeroline=False,
+        xaxis_zeroline=False,
+        dragmode='select'
+    )
+    fig.update_xaxes(fixedrange=True)
+    fig.update_yaxes(fixedrange=True)
+
+    # highlight points with selection other graph
+    if selectedpoints is None:
+        selected_index = df.index  # show all
+    else:
+        selected_index = [  # show only selected indices
+            point['pointIndex']
+            for point in selectedpoints['points']
+        ]
+
+    fig.update_traces(
+        # color of selected points
+        selected=dict(marker=dict(opacity=1.0)),
+        # color of unselected pts
+        unselected=dict(marker=dict(opacity=0.2))
+    )
+
+    current_indexes = [ x for x in range( len(fig.data) ) ]
+    unselected_indexes = [x for x in current_indexes if x not in selected_index]
+
+    for point in unselected_indexes:
+        fig.data[point].update(
+            selectedpoints=selected_index
+        )
+
+    # update axis titles
+    fig.update_layout(
+        xaxis_title=attrib1,
+        yaxis_title=attrib2,
+    )
+
+    return fig
+
 
 # Read and pre-process dta
 def get_data(year):
@@ -241,9 +365,10 @@ def remove_missing_value(df):
 # Map IDS to the corresponding value
 def id_to_value(df):
     df_mapped = df.copy()
-    return df_mapped.replace({'light_conditions': ID_TO_LIGHT_CONDITIONS, 'junction_detail' : ID_TO_JUNCTION_DETAIL, \
-    'junction_control' : ID_TO_JUNCTION_CONTROL, 'road_surface_conditions' : ID_TO_ROAD_SURFACE_CONDITIONS, \
-    'special_conditions_at_site' : ID_TO_SPECIAL_CONDITIONS_AT_SITE})
+    return df_mapped.replace({'light_conditions': ID_TO_LIGHT_CONDITIONS, 'junction_detail': ID_TO_JUNCTION_DETAIL, \
+                              'junction_control': ID_TO_JUNCTION_CONTROL,
+                              'road_surface_conditions': ID_TO_ROAD_SURFACE_CONDITIONS, \
+                              'special_conditions_at_site': ID_TO_SPECIAL_CONDITIONS_AT_SITE})
 
 # Method to generate list of time intervals for grouping accidents
 def generate_list_intervals(interval_size):
