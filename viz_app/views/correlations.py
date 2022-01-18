@@ -5,6 +5,10 @@ from dash import dcc
 import datetime
 import plotly.express as px
 import pandas as pd
+import numpy as np
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 from dash.dependencies import Input, Output, MATCH, ALL
 
 from viz_app.main import app
@@ -102,13 +106,36 @@ def make_correlations_panel():
                                      for x in SORT_ORDER_OPTIONS],
                             value='None'
                         ),
-                    ])
+                    ]),
+                    html.Div(
+                        id='correlations-kmeans-settings', 
+                        children = [
+                        dcc.Checklist(
+                            id={
+                                'type': "correlations-kmeans",
+                                'index': 0,
+                            },
+                            options = [{'value':'k_means', 'label':'Enable K-Means Clustering'}],
+                            value = [],
+                            labelStyle={'display': 'inline-block'},
+                        ),
+                        html.Label("Number of clusters:"),
+                        dcc.Input(
+                            id={
+                                'type': "correlations-kmeans",
+                                'index': 1,
+                            },
+                            type='number',
+                            min=1,
+                            value = 5,
+                        ),
+                    ]),
                 ]
             )
         ]
 
 
-def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_disc, corr_sort_order, filterx, filtery):
+def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_disc, corr_sort_order, filterx, filtery, k_means, n_clusters):
     # You can use:
     # (attrib1 in categorical_attribs) and
     # (attrib1 in quantitive_attribs)
@@ -194,17 +221,44 @@ def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_di
                 dcc.Graph(id='g1', figure=fig),
                 dcc.Graph(id='g2', figure=fig2)
             ],
-            "dataframe" : df_fatal
+            "dataframe" : df_to_use
         }
 
     if (attrib1 in QUANTITATIVE_ATTRIBS and attrib2 in QUANTITATIVE_ATTRIBS):
         df_fatal = calculate_fatality_rate(df_temp, attrib1)
-        df_global = df_fatal
+        df_to_use = df_fatal
+        color = "fatality_rate"
+
+        if 'k_means' in k_means:
+            df_kmeans = df_to_use[[attrib2]].reset_index().copy()
+            df_kmeans['time'] = [int(x[0:2])*60 + int(x[3:5]) for x in df_kmeans['time']]
+            #print(df_kmeans.head())
+            X = np.array(df_kmeans)
+
+            pca = PCA()
+            pca.fit(X)
+            pca.n_components = 2
+            X_reduced = pca.fit_transform(X)
+            kmeans = KMeans(n_clusters=n_clusters)
+            kmeans.fit(X_reduced)
+            Z = kmeans.predict(X_reduced)
+            color = Z.astype(str)
+            #print(kmeans.cluster_centers_)
+            fig2 = px.scatter(x=kmeans.cluster_centers_[:,0], y=kmeans.cluster_centers_[:,1], height=800,
+                        color=[str(n) for n in range(0, n_clusters)], color_continuous_scale=corr_color_seq,
+                                    color_discrete_sequence=corr_color_disc)
+            fig2.update_traces(marker=dict(size=15, symbol='x'), selector=dict(mode='markers'))
+
         # Create new plot
         fig = px.scatter(df_fatal.reset_index(), x=attrib1, y=attrib2, height=800,
-                         color="fatality_rate", color_continuous_scale=corr_color_seq)
+                        color=color, color_continuous_scale=corr_color_seq,
+                                    color_discrete_sequence=corr_color_disc)
+
         fig = add_sort_order(fig, corr_sort_order)
         fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))
+
+        # if 'k_means' in k_means:
+            # fig.add_trace(fig2.data[0])
 
         return  {
             "children" : [
@@ -220,7 +274,6 @@ def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_di
             "dataframe" : []
         }
 
-
 # Helper function to set sorting order on graph
 def add_sort_order(fig, req_order):
     if req_order == SORT_ORDER_OPTIONS[1]:
@@ -228,7 +281,7 @@ def add_sort_order(fig, req_order):
     elif req_order == SORT_ORDER_OPTIONS[2]:
         fig.update_xaxes(categoryorder="total descending")
     elif req_order == SORT_ORDER_OPTIONS[0]:
-        fig.update_xaxes(categoryorder="trace")
+        fig.update_xaxes(categoryorder="category ascending")
     return fig
 
 
@@ -246,7 +299,13 @@ def calculate_fatality_rate(df_temp, attrib1):
 
     return df_fatal
 
-
+@ app.callback(Output('correlations-kmeans-settings', 'style'),
+    Input({'type': 'correlations-attrib', 'index': ALL}, 'value'),)
+def show_hide_homepage(attribs):
+    if attribs[0] in QUANTITATIVE_ATTRIBS and attribs[1] in QUANTITATIVE_ATTRIBS:
+        return {'display': 'block'}
+    
+    return {'display': 'none'}
 
 
 # @app.callback(

@@ -106,11 +106,11 @@ app.layout = html.Div(
 ])
 
 
-@ app.callback(dash.dependencies.Output('home-page', 'style'),
-    dash.dependencies.Output('filter-panel', 'style'), 
-    dash.dependencies.Output('rightColumn', 'style'), 
-    dash.dependencies.Output('leftColumn', 'style'), 
-    dash.dependencies.Input('url', 'pathname'))
+@ app.callback(Output('home-page', 'style'),
+    Output('filter-panel', 'style'), 
+    Output('rightColumn', 'style'), 
+    Output('leftColumn', 'style'), 
+    Input('url', 'pathname'))
 def show_hide_homepage(pathname):
     show = {'display': 'block'}
     hide = {'display': 'none'}
@@ -120,8 +120,8 @@ def show_hide_homepage(pathname):
     return show, hide, hide, hide
 
 # Changing the left panel based on the url
-@app.callback(dash.dependencies.Output('panel-content', 'children'),
-              [dash.dependencies.Input('url', 'pathname')])
+@app.callback(Output('panel-content', 'children'),
+              [Input('url', 'pathname')])
 def display_options(pathname):
     if pathname == '/map':
         return make_map_panel()
@@ -193,7 +193,7 @@ def create_filter(n_clicks, filterSection):
 
 
 # Changing the right panel based on the url
-@app.callback(dash.dependencies.Output('graph-content', 'children'),
+@app.callback(Output('graph-content', 'children'),
               [Input('url', 'pathname'),
                Input('dataset-year', 'value'),
 
@@ -207,20 +207,21 @@ def create_filter(n_clicks, filterSection):
                Input({'type': 'correlations-colorscale-disc', 'index': ALL}, 'value'),
                Input({'type': 'correlations-sorting-order', 'index': ALL}, 'value'),
                Input({'type': 'correlations-attrib-filter', 'index': ALL}, 'value'),
+               Input({'type': 'correlations-kmeans', 'index': ALL}, 'value'),
 
                # Trends Options
                Input({'type': 'trends-attrib', 'index': ALL}, 'value'),
                Input({'type': 'trends-colorscale-disc', 'index': ALL}, 'value'),
                ])
 def display_graphs(pathname, year, map_attribs, map_color_seq, corr_attribs,
-                   corr_color_seq, corr_color_disc, corr_sort_order, filter_val, trends_attribs, trends_color_disc):
+                   corr_color_seq, corr_color_disc, corr_sort_order, filter_val, k_means, trends_attribs, trends_color_disc):
     df = get_data(year)
     if pathname == '/map':
         return make_map_graphs(df, map_attribs[0], map_attribs[1], get_seq_cont_color(map_color_seq[0]))
     elif pathname == '/correlations':
         temp_data = make_correlations_graphs(df, corr_attribs[0], corr_attribs[1],
                                              get_seq_cont_color(corr_color_seq[0]),
-                                             get_disc_color(corr_color_disc[0]), corr_sort_order[0], filter_val[0], filter_val[1])
+                                             get_disc_color(corr_color_disc[0]), corr_sort_order[0], filter_val[0], filter_val[1], k_means[0], k_means[1])
         if temp_data:
             storage.update(temp_data["dataframe"])
             return temp_data['children']
