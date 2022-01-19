@@ -228,37 +228,34 @@ def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_di
         df_fatal = calculate_fatality_rate(df_temp, attrib1)
         df_to_use = df_fatal
         color = "fatality_rate"
+        colormap=corr_color_seq
 
         if 'k_means' in k_means:
+            colormap=corr_color_disc
+
             df_kmeans = df_to_use[[attrib2]].reset_index().copy()
             df_kmeans['time'] = [int(x[0:2])*60 + int(x[3:5]) for x in df_kmeans['time']]
             #print(df_kmeans.head())
-            X = np.array(df_kmeans)
-
-            pca = PCA()
-            pca.fit(X)
-            pca.n_components = 2
-            X_reduced = pca.fit_transform(X)
-            kmeans = KMeans(n_clusters=n_clusters)
-            kmeans.fit(X_reduced)
-            Z = kmeans.predict(X_reduced)
-            color = Z.astype(str)
-            #print(kmeans.cluster_centers_)
-            fig2 = px.scatter(x=kmeans.cluster_centers_[:,0], y=kmeans.cluster_centers_[:,1], height=800,
-                        color=[str(n) for n in range(0, n_clusters)], color_continuous_scale=corr_color_seq,
+            kmeans = KMeans(n_clusters=n_clusters).fit(df_kmeans)
+            # Z = kmeans.predict(X_reduced)
+            color = kmeans.labels_
+            centroid_time = [min_to_time(x) for x in kmeans.cluster_centers_[:,0]]
+            fig2 = px.scatter(x=centroid_time, y=kmeans.cluster_centers_[:,1],
+                        color=range(0, n_clusters), color_continuous_scale=corr_color_disc,
                                     color_discrete_sequence=corr_color_disc)
-            fig2.update_traces(marker=dict(size=15, symbol='x'), selector=dict(mode='markers'))
+            fig2.update_traces(marker=dict(size=20, symbol='x', opacity=1.0), selector=dict(mode='markers'))
 
         # Create new plot
         fig = px.scatter(df_fatal.reset_index(), x=attrib1, y=attrib2, height=800,
-                        color=color, color_continuous_scale=corr_color_seq,
-                                    color_discrete_sequence=corr_color_disc)
+                        color=color, color_continuous_scale=colormap)
 
         fig = add_sort_order(fig, corr_sort_order)
         fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))
 
-        # if 'k_means' in k_means:
-            # fig.add_trace(fig2.data[0])
+        if 'k_means' in k_means:
+            fig.update_traces(marker=dict(opacity=0.3), selector=dict(mode='markers'))
+            fig.add_trace(fig2.data[0])
+            fig.update_coloraxes(showscale=False)
 
         return  {
             "children" : [
@@ -273,6 +270,18 @@ def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_di
             "children" : [],
             "dataframe" : []
         }
+
+def min_to_time(mins):
+    hours = int(mins/60)
+    remainder_mins = int(mins%60)
+    hours_string = str(hours)
+    mins_string = str(remainder_mins)
+    if hours < 10:
+        hours_string = '0' + hours_string
+    if remainder_mins < 10:
+        mins_string = '0' + mins_string
+
+    return hours_string + ':' + mins_string
 
 # Helper function to set sorting order on graph
 def add_sort_order(fig, req_order):
