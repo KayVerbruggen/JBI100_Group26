@@ -215,7 +215,7 @@ def create_filter(n_clicks, filterSection):
                 "index": n_clicks
             },
             children=[
-                html.Label("Filter {}".format(n_clicks)),
+                html.Label("Filter {}".format(n_clicks + 1)),
                 dcc.Dropdown(
                     style={"margin-bottom": "8px"},
                     id={
