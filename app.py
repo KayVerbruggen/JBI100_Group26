@@ -16,8 +16,8 @@ from viz_app.views.correlations import make_correlations_panel, make_correlation
 from viz_app.views.trends import make_trends_panel, make_trends_graphs
 import config
 from config import ID_TO_LIGHT_CONDITIONS, ID_TO_JUNCTION_DETAIL, ID_TO_SPECIAL_CONDITIONS_AT_SITE, CATEGORICAL_ATTRIBS, QUANTITATIVE_ATTRIBS, \
-                   MISSING_VALUE_TABLE, ID_TO_JUNCTION_CONTROL, ID_TO_ROAD_SURFACE_CONDITIONS, ID_TO_SPECIAL_CONDITIONS_AT_SITE, DISCRETE_COL, \
-                   SEQ_CONT_COL, SORT_ORDER_OPTIONS, LIGHT_CONDITIONS, SPECIAL_CONDITIONS_AT_SITE, ROAD_SURFACE_CONDITIONS, \
+                   MISSING_VALUE_TABLE, ID_TO_JUNCTION_CONTROL, ID_TO_ROAD_SURFACE_CONDITIONS, ID_TO_SPECIAL_CONDITIONS_AT_SITE, \
+                   LIGHT_CONDITIONS, SPECIAL_CONDITIONS_AT_SITE, ROAD_SURFACE_CONDITIONS, \
                    JUNCTION_CONTROL, JUNCTION_DETAIL, ALL_ATTRIBUTES, SPEED_LIMIT
 
 
@@ -86,7 +86,7 @@ app.layout = html.Div(
             html.H5("Filter"),
             html.Button(
                 "New filter",
-                style={"margin-bottom": "24px"},
+                className="button",
                 id="btn-add-filter",
                 n_clicks = 0
             ),
@@ -94,14 +94,14 @@ app.layout = html.Div(
                  style={
                     "display": "flex",
                     "flex-direction": "column",
-                    "gap": "16px",
+                    "gap": "12px",
                 }, 
                 id="filter-section",
                 children=[]
             ),
             html.Button(
                 "Apply",
-                style={"margin-top": "24px"},
+                className="button",
                 id="btn-apply-filter",
                 n_clicks = 0
             ),
@@ -154,12 +154,23 @@ def add_filter_option(attrib, id, year):
     df = get_data(year)
     if (attrib in QUANTITATIVE_ATTRIBS):
         column = df[attrib]
+        x = attrib
         if (attrib == "time"):
             column = df["time_index"]
+            x = "time_index"
 
         val_min = column.min()
         val_max = column.max()
-        return [dcc.RangeSlider(className=attrib, id={"type": "filter-action-slider", \
+        fig = px.histogram(df, x=x)
+        fig.update_layout(
+            xaxis={'visible': False, 'showticklabels': False}, 
+            yaxis={'visible': False, 'showticklabels': False},
+            margin=dict(l=20, r=20, t=0, b=0),
+            paper_bgcolor='rgba(0,0,0,0)',
+        )
+        return [
+            dcc.Graph(figure=fig, style={"margin-bottom": "8px"}),
+            dcc.RangeSlider(className=attrib, id={"type": "filter-action-slider", \
             "index": id["index"]}, value=[val_min, val_max], min=val_min, max=val_max, \
             step=None, 
             marks={
@@ -171,14 +182,13 @@ def add_filter_option(attrib, id, year):
                 1500: {'label': "15"},
                 1800: {'label': "18"},
                 2100: {'label': "21"},
-                2359: {"label": "23:59"}
+                2359: {"label": "24"}
             }), html.Div(style={"display": "flex", "justify-content": "space-between"}, 
                 children=[
                     html.Label(id={"type": "slider-label-start", "index": id["index"]} ,children = "00:00"),
                     html.Label(id={"type": "slider-label-end", "index": id["index"]} ,children = "23:59")
             ])]
     elif (attrib in CATEGORICAL_ATTRIBS):
-        # TODO: Add checkboxes
         options = []
         if attrib == "light_conditions":
             options = [{'label': x, 'value': x} for x in LIGHT_CONDITIONS]
@@ -264,7 +274,6 @@ def filter_by_attributes(list_filter_categorical, list_filter_quantitative, list
     list_filter = list_filter_categorical + list_filter_quantitative
     list_attrib = list_attribute_categorical + list_attrib_quantitative
     filter_dict = create_filter_dict(list_filter, list_attrib)
-    print(filter_dict)
     return json.dumps(filter_dict)
 
 
@@ -281,7 +290,6 @@ def filter_by_attributes(list_filter_categorical, list_filter_quantitative, list
                 Input({'type': 'correlations-colorscale-seq', 'index': ALL}, 'value'),
                 Input({'type': 'correlations-colorscale-disc', 'index': ALL}, 'value'),
                 Input({'type': 'correlations-sorting-order', 'index': ALL}, 'value'),
-                Input({'type': 'correlations-attrib-filter', 'index': ALL}, 'value'),
                 Input({'type': 'correlations-kmeans', 'index': ALL}, 'value'),
 
                 # Trends Options
@@ -293,7 +301,7 @@ def filter_by_attributes(list_filter_categorical, list_filter_quantitative, list
                 State("placeholder", "children")
             ])
 def display_graphs(pathname, year, map_attribs, map_color_seq, corr_attribs,
-                   corr_color_seq, corr_color_disc, corr_sort_order, filter_val, k_means, trends_attribs, trends_color_disc, n_clicks, filter_json):
+                   corr_color_seq, corr_color_disc, corr_sort_order, k_means, trends_attribs, trends_color_disc, n_clicks, filter_json):
     df = get_data(year)
     df_filtered = df.copy()
     # Parse filter_dict in json format that is stored in "#placeholder"
@@ -307,7 +315,7 @@ def display_graphs(pathname, year, map_attribs, map_color_seq, corr_attribs,
     elif pathname == '/correlations':
         temp_data = make_correlations_graphs(df_filtered, corr_attribs[0], corr_attribs[1],
                                              get_seq_cont_color(corr_color_seq[0]),
-                                             get_disc_color(corr_color_disc[0]), corr_sort_order[0], filter_val[0], filter_val[1], k_means[0], k_means[1])
+                                             get_disc_color(corr_color_disc[0]), corr_sort_order[0], k_means[0], k_means[1])
         if temp_data:
             storage.update(temp_data["dataframe"])
             return temp_data['children']
@@ -459,10 +467,15 @@ def filter_dataset(df, filter_dict):
     # Iterate through each filter option
     for attrib in filter_dict:
         filter_options = filter_dict[attrib]
-        # If the attribute filter is currently empty, skip it
         if (len(filter_options) == 0):
             continue
-        df_filtered = df_filtered[df_filtered[attrib].isin(filter_options)]
+        if (attrib == "time"): 
+            start = filter_options[0]
+            end = filter_options[1]
+            df_filtered = df_filtered[(df_filtered["time_index"] >= start) & (df_filtered["time_index"] <= end)]
+        else:
+            df_filtered = df_filtered[df_filtered[attrib].isin(filter_options)]
+
     return df_filtered
 
 

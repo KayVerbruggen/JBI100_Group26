@@ -80,3 +80,11 @@ h5 {
     flex-direction: column;
     gap: 12px;
 }
+
+.button {
+    width: 100%;
+    margin: 24px 0 14px 0;
+}
+.button:hover {
+    background-color: lightgrey;
+}
