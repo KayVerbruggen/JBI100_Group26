@@ -1,5 +1,4 @@
 import os
-from sre_constants import ANY
 from _plotly_utils.colors import get_colorscale
 import dash
 from dash import html
@@ -7,6 +6,7 @@ from dash import dcc
 import plotly.express as px
 import pandas as pd
 import datetime
+import json
 from dash.dependencies import Input, Output, MATCH, ALL, State
 
 from viz_app.main import app
@@ -16,7 +16,11 @@ from viz_app.views.correlations import make_correlations_panel, make_correlation
 from viz_app.views.trends import make_trends_panel, make_trends_graphs
 import config
 from config import ID_TO_LIGHT_CONDITIONS, ID_TO_JUNCTION_DETAIL, ID_TO_SPECIAL_CONDITIONS_AT_SITE, CATEGORICAL_ATTRIBS, QUANTITATIVE_ATTRIBS, \
-                   MISSING_VALUE_TABLE, ID_TO_JUNCTION_CONTROL, ID_TO_ROAD_SURFACE_CONDITIONS, ID_TO_SPECIAL_CONDITIONS_AT_SITE, DISCRETE_COL, SEQ_CONT_COL, SORT_ORDER_OPTIONS
+                   MISSING_VALUE_TABLE, ID_TO_JUNCTION_CONTROL, ID_TO_ROAD_SURFACE_CONDITIONS, ID_TO_SPECIAL_CONDITIONS_AT_SITE, DISCRETE_COL, \
+                   SEQ_CONT_COL, SORT_ORDER_OPTIONS, LIGHT_CONDITIONS, SPECIAL_CONDITIONS_AT_SITE, ROAD_SURFACE_CONDITIONS, \
+                   JUNCTION_CONTROL, JUNCTION_DETAIL, ALL_ATTRIBUTES, SPEED_LIMIT
+
+
 
 storage = Storage({})
 
@@ -32,10 +36,10 @@ def get_seq_cont_color(c):
 def generate_dropdown_label(a):
     return a.replace("_", " ").title()
 
-
 app.layout = html.Div(
     style={"width": "100%", "height": "100%"},
     children = [
+    html.Div(id="placeholder", style={"visibility": "hidden", "position": "absolute"}),
     html.Div(
         className="topnav",
         children=[
@@ -82,6 +86,7 @@ app.layout = html.Div(
             html.H5("Filter"),
             html.Button(
                 "New filter",
+                style={"margin-bottom": "24px"},
                 id="btn-add-filter",
                 n_clicks = 0
             ),
@@ -93,7 +98,13 @@ app.layout = html.Div(
                 }, 
                 id="filter-section",
                 children=[]
-            )
+            ),
+            html.Button(
+                "Apply",
+                style={"margin-top": "24px"},
+                id="btn-apply-filter",
+                n_clicks = 0
+            ),
         ]
     ),
     html.Div(
@@ -142,20 +153,46 @@ def add_filter_option(attrib, id, year):
     # Dynamically create filter option based on the selected attribute type (i.e. Categorical)
     df = get_data(year)
     if (attrib in QUANTITATIVE_ATTRIBS):
-        print(attrib)
         column = df[attrib]
+        if (attrib == "time"):
+            column = df["time_index"]
+
         val_min = column.min()
         val_max = column.max()
-        val_median = column.median()
-        return dcc.Slider(className="slider", id={"type": "filter-action", "index": id["index"]},\
-             value=val_median, min=val_min, max=val_max, step=1, 
-             marks={
-                 0: {'label': val_min},
-                 100: {"label": val_max}
-             })
+        return [dcc.RangeSlider(className=attrib, id={"type": "filter-action-slider", \
+            "index": id["index"]}, value=[val_min, val_max], min=val_min, max=val_max, \
+            step=None, 
+            marks={
+                0: {'label': "00"},
+                300: {'label': "03"},
+                600: {'label': "06"},
+                900: {'label': "09"},
+                1200: {'label': "12"},
+                1500: {'label': "15"},
+                1800: {'label': "18"},
+                2100: {'label': "21"},
+                2359: {"label": "23:59"}
+            }), html.Div(style={"display": "flex", "justify-content": "space-between"}, 
+                children=[
+                    html.Label(id={"type": "slider-label-start", "index": id["index"]} ,children = "00:00"),
+                    html.Label(id={"type": "slider-label-end", "index": id["index"]} ,children = "23:59")
+            ])]
     elif (attrib in CATEGORICAL_ATTRIBS):
         # TODO: Add checkboxes
-        return html.Div(id={"type": "filter-action", "index": id["index"]}, children=[])
+        options = []
+        if attrib == "light_conditions":
+            options = [{'label': x, 'value': x} for x in LIGHT_CONDITIONS]
+        if attrib == "special_conditions_at_site":
+            options =  [{'label': x, 'value': x} for x in SPECIAL_CONDITIONS_AT_SITE]
+        if attrib == "road_surface_conditions":
+            options =  [{'label': x, 'value': x} for x in ROAD_SURFACE_CONDITIONS]
+        if attrib == "junction_control":
+            options = [{'label': x, 'value': x} for x in JUNCTION_CONTROL]
+        if attrib == "junction_detail":
+            options = [{'label': x, 'value': x} for x in JUNCTION_DETAIL]
+        if attrib == "speed_limit":
+            options = [{'label': x, 'value': x} for x in SPEED_LIMIT]
+        return dcc.Dropdown(className=attrib, id={"type": "filter-action-select", "index": id["index"]}, multi=True, options=options, value="")
 
 # This is a onClick handler for creating new attribute filter
 @app.callback(Output("filter-section", "children"), Input("btn-add-filter", "n_clicks"),
@@ -168,14 +205,15 @@ def create_filter(n_clicks, filterSection):
                 "index": n_clicks
             },
             children=[
-                html.Label("Filter {}".format(1)),
+                html.Label("Filter {}".format(n_clicks)),
                 dcc.Dropdown(
+                    style={"margin-bottom": "8px"},
                     id={
                         'type': "filter-attribute-dropdown",
                         'index': n_clicks,
                     },
                     options=[{'label': generate_dropdown_label(a), 'value': a} for a in (
-                        CATEGORICAL_ATTRIBS + QUANTITATIVE_ATTRIBS)],
+                        ALL_ATTRIBUTES)],
                     searchable=False,
                 ),
                 html.Div(
@@ -190,36 +228,84 @@ def create_filter(n_clicks, filterSection):
     )
     return filterSection
 
+@app.callback(
+    Output({"type": "slider-label-start", "index": MATCH}, "children"),
+    Output({"type": "slider-label-end", "index": MATCH}, "children"),
+    Input({"type": "filter-action-slider", "index": MATCH}, "value"))
+def display_slider_label(interval):
+    temp_1 = interval[0]
+    temp_2 = interval[1]
+    start = ""
+    end = ""
+    if (temp_1 < 1000):
+        start = "0{}:{}".format(str(temp_1)[0], str(temp_1)[1:])
+        if (temp_1 == 0):
+            start = "00:00"
+    else:
+        start = "{}:{}".format(str(temp_1)[0: 2], str(temp_1)[2:])
+
+    if (temp_2 < 1000):
+        if (temp_2 == 0):
+            start = "00:00"
+        end = "0{}:{}".format(str(temp_2)[0], str(temp_2)[1:])
+    else:
+        end = "{}:{}".format(str(temp_2)[0: 2], str(temp_2)[2:])
+    return start, end
+
+
+@app.callback(
+    Output("placeholder", "children"),
+    Input({"type": "filter-action-select", "index": ALL}, "value"),
+    Input({"type": "filter-action-slider", "index": ALL}, "value"),
+    State({"type": "filter-action-select", "index": ALL}, "className"),
+    State({"type": "filter-action-slider", "index": ALL}, "className"))
+def filter_by_attributes(list_filter_categorical, list_filter_quantitative, list_attribute_categorical, list_attrib_quantitative):
+    filter_dict = {}
+    list_filter = list_filter_categorical + list_filter_quantitative
+    list_attrib = list_attribute_categorical + list_attrib_quantitative
+    filter_dict = create_filter_dict(list_filter, list_attrib)
+    print(filter_dict)
+    return json.dumps(filter_dict)
 
 
 # Changing the right panel based on the url
 @app.callback(Output('graph-content', 'children'),
-              [Input('url', 'pathname'),
-               Input('dataset-year', 'value'),
+                [Input('url', 'pathname'),
+                Input('dataset-year', 'value'),  
+                # Map Options
+                Input({'type': 'map-attrib', 'index': ALL}, 'value'),
+                Input({'type': 'map-colorscale-seq', 'index': ALL}, 'value'),
 
-               # Map Options
-               Input({'type': 'map-attrib', 'index': ALL}, 'value'),
-               Input({'type': 'map-colorscale-seq', 'index': ALL}, 'value'),
+                # Correlations Options
+                Input({'type': 'correlations-attrib', 'index': ALL}, 'value'),
+                Input({'type': 'correlations-colorscale-seq', 'index': ALL}, 'value'),
+                Input({'type': 'correlations-colorscale-disc', 'index': ALL}, 'value'),
+                Input({'type': 'correlations-sorting-order', 'index': ALL}, 'value'),
+                Input({'type': 'correlations-attrib-filter', 'index': ALL}, 'value'),
+                Input({'type': 'correlations-kmeans', 'index': ALL}, 'value'),
 
-               # Correlations Options
-               Input({'type': 'correlations-attrib', 'index': ALL}, 'value'),
-               Input({'type': 'correlations-colorscale-seq', 'index': ALL}, 'value'),
-               Input({'type': 'correlations-colorscale-disc', 'index': ALL}, 'value'),
-               Input({'type': 'correlations-sorting-order', 'index': ALL}, 'value'),
-               Input({'type': 'correlations-attrib-filter', 'index': ALL}, 'value'),
-               Input({'type': 'correlations-kmeans', 'index': ALL}, 'value'),
+                # Trends Options
+                Input({'type': 'trends-attrib', 'index': ALL}, 'value'),
+                Input({'type': 'trends-colorscale-disc', 'index': ALL}, 'value'),
 
-               # Trends Options
-               Input({'type': 'trends-attrib', 'index': ALL}, 'value'),
-               Input({'type': 'trends-colorscale-disc', 'index': ALL}, 'value'),
-               ])
+                # Filter
+                Input("btn-apply-filter", "n_clicks"),
+                State("placeholder", "children")
+            ])
 def display_graphs(pathname, year, map_attribs, map_color_seq, corr_attribs,
-                   corr_color_seq, corr_color_disc, corr_sort_order, filter_val, k_means, trends_attribs, trends_color_disc):
+                   corr_color_seq, corr_color_disc, corr_sort_order, filter_val, k_means, trends_attribs, trends_color_disc, n_clicks, filter_json):
     df = get_data(year)
+    df_filtered = df.copy()
+    # Parse filter_dict in json format that is stored in "#placeholder"
+    filter_dict = json.loads(filter_json)
+    # If the apply button is clicked and the filter is not empty
+    if (n_clicks != 0) and (len(filter_dict) != 0):
+        # Filter dataset
+        df_filtered = filter_dataset(df, filter_dict)
     if pathname == '/map':
-        return make_map_graphs(df, map_attribs[0], map_attribs[1], get_seq_cont_color(map_color_seq[0]))
+        return make_map_graphs(df_filtered, map_attribs[0], map_attribs[1], get_seq_cont_color(map_color_seq[0]))
     elif pathname == '/correlations':
-        temp_data = make_correlations_graphs(df, corr_attribs[0], corr_attribs[1],
+        temp_data = make_correlations_graphs(df_filtered, corr_attribs[0], corr_attribs[1],
                                              get_seq_cont_color(corr_color_seq[0]),
                                              get_disc_color(corr_color_disc[0]), corr_sort_order[0], filter_val[0], filter_val[1], k_means[0], k_means[1])
         if temp_data:
@@ -228,7 +314,7 @@ def display_graphs(pathname, year, map_attribs, map_color_seq, corr_attribs,
         return temp_data
 
     elif pathname == '/trends':
-        return make_trends_graphs(df, trends_attribs[0], trends_attribs[1], get_disc_color(trends_color_disc[0]))
+        return make_trends_graphs(df_filtered, trends_attribs[0], trends_attribs[1], get_disc_color(trends_color_disc[0]))
     else:
         return []
     # You could also return a 404 "URL not found" page here
@@ -352,7 +438,33 @@ def get_data(year):
         os.getcwd() + "/datasets/road_safety_" + str(year) + ".csv")
     df_valid = remove_missing_value(df)
     df = id_to_value(df_valid)
+    # Add "time as integer" as a new column
+    df['time_index'] = pd.to_numeric(df["time"].str.replace(':','')).astype("int")
     return df
+
+# This is an auxillary method to create filter_dict from lists of attibutes and their selected options
+def create_filter_dict(list_filter, list_attribute):
+    filter_dict = {}
+    for i in range(0, len(list_attribute)):
+        attrib = list_attribute[i]
+        try:
+            filter_dict[attrib] = filter_dict[attrib] + list_filter[i]
+        except:
+            filter_dict[attrib] = list_filter[i]
+    return filter_dict
+
+# This is an auxillary method to filter a given dataset using a filter_dict
+def filter_dataset(df, filter_dict):
+    df_filtered = df.copy()
+    # Iterate through each filter option
+    for attrib in filter_dict:
+        filter_options = filter_dict[attrib]
+        # If the attribute filter is currently empty, skip it
+        if (len(filter_options) == 0):
+            continue
+        df_filtered = df_filtered[df_filtered[attrib].isin(filter_options)]
+    return df_filtered
+
 
 # Remove rows with missing values for every target attribute
 def remove_missing_value(df):

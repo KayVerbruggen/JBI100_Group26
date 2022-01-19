@@ -1,4 +1,5 @@
-from re import M
+from re import M, S
+from ssl import SSL_ERROR_EOF
 from pandas.core.frame import DataFrame
 
 # Missing value dictionary for preprocessing
@@ -11,6 +12,16 @@ MISSING_VALUE_TABLE = {
     "time": [],
     "speed_limit": [-1, 660, 630],
     "local_authority_district": [-1],
+}
+
+ALL_ATTRIBUTES = {
+    "light_conditions",
+    "special_conditions_at_site",
+    "road_surface_conditions",
+    "junction_control",
+    "junction_detail",
+    "time",
+    "speed_limit"
 }
 
 LIGHT_CONDITIONS = {
@@ -57,6 +68,15 @@ JUNCTION_DETAIL = {
     'Junction more than four arms (not RAB)',
     'Using private drive or entrance',
     'Other junction',
+}
+
+SPEED_LIMIT = {
+    20,
+    30,
+    40,
+    50,
+    60,
+    70
 }
 
 DISCRETE_COL = {
