@@ -327,31 +327,37 @@ def display_graphs(pathname, year, map_attribs, map_color_seq, corr_attribs,
         return []
     # You could also return a 404 "URL not found" page here
 
-
 @app.callback(
-    Output("g1", "figure"),[
-        Input("g1", "figure"),
-        Input("g2", 'selectedData'),
-        Input({'type': 'correlations-attrib', 'index': ALL}, 'value'),
-        Input({'type': 'correlations-colorscale-seq', 'index': ALL}, 'value'),
+    Output({'type': 'correlations-graph', 'index': ALL}, 'figure'), 
+        Input({'type': 'correlations-graph', 'index': ALL}, 'selectedData'),
+    [
+        State({'type': 'correlations-attrib', 'index': ALL}, 'value'),
+        State({'type': 'correlations-colorscale-seq', 'index': ALL}, 'value'),
+        State({'type': 'correlations-colorscale-disc', 'index': ALL}, 'value'),
     ])
-def update_scatter(orig_fig, selected_data, corr_atrib, color_seq):
-    if selected_data is not None:
-        return update_figure_scatter(storage.get(), corr_atrib[0], corr_atrib[1], selected_data, color_seq[0])
-    return orig_fig
+def update_brushing(selected_data, corr_atrib, color_seq, color_disc):
+    # If there are no two graphs, don't change anything.
+    if len(selected_data) != 2:
+        return dash.no_update
+    
+    print(selected_data)
 
-
-@app.callback(
-    Output("g2", "figure"), [
-        Input("g2", 'figure'),
-        Input("g1", 'selectedData'),
-        Input({'type': 'correlations-attrib', 'index': ALL}, 'value'),
-        Input({'type': 'correlations-colorscale-disc', 'index': ALL}, 'value'),
-    ])
-def update_histogram(orig_fig, selected_data, corr_atrib, color_disc):
-    if selected_data is not None:
-        return update_figure_histogram(storage.get(), corr_atrib[0], corr_atrib[1], selected_data, get_disc_color(color_disc[0]))
-    return orig_fig
+    # If the selected data changed for graph 0.
+    if "\"index\":0" in dash.callback_context.triggered[0]['prop_id'] and selected_data[0] != None:
+        # Update the second graph and leave the first the same.
+        return [
+            dash.no_update, 
+            update_figure_histogram(storage.get(), corr_atrib[0], corr_atrib[1], selected_data[0], get_disc_color(color_disc[0]))
+        ]
+    elif "\"index\":1" in dash.callback_context.triggered[0]['prop_id'] and selected_data[1] != None:
+        # Update the first graph and leave the second the same.
+        return [
+            update_figure_scatter(storage.get(), corr_atrib[0], corr_atrib[1], selected_data[1], color_seq[0]), 
+            dash.no_update
+        ]
+    
+    # Should never reach this, just in case.
+    return dash.no_update
 
 
 def update_figure_scatter(df, attrib1, attrib2, selectedpoints, corr_color_seq):

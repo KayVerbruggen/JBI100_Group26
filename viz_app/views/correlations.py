@@ -5,10 +5,7 @@ from dash import dcc
 import datetime
 import plotly.express as px
 import pandas as pd
-import numpy as np
 from sklearn.cluster import KMeans
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
 from dash.dependencies import Input, Output, MATCH, ALL
 
 from viz_app.main import app
@@ -152,7 +149,13 @@ def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_di
         return {
             "children" : [
                 html.H5("Parallel Categories Diagram"),
-                dcc.Graph(figure=fig)
+                dcc.Graph(
+                    id={
+                        'type': "correlations-graph",
+                        'index': 0,
+                    }, 
+                    figure=fig
+                )
             ],
             "dataframe" : final_df
         }
@@ -179,8 +182,20 @@ def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_di
             "children" : [
                 html.H5("Scatter Plot and Histogram"),
                 html.H6("{}(x) vs {}(y)".format(attrib1, attrib2)),
-                dcc.Graph(id='g1', figure=fig),
-                dcc.Graph(id='g2', figure=fig2)
+                dcc.Graph(
+                    id={
+                        'type': "correlations-graph",
+                        'index': 0,
+                    }, 
+                    figure=fig
+                ),
+                dcc.Graph(
+                    id={
+                        'type': "correlations-graph",
+                        'index': 1,
+                    }, 
+                    figure=fig2
+                )
             ],
             "dataframe" : df_fatal
         }
@@ -222,7 +237,13 @@ def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_di
             "children" : [
                 html.H5("Scatter Plot"),
                 html.H6("{}(x) vs {}(y)".format(attrib1, attrib2)),
-                dcc.Graph(id='g1', figure=fig),
+                dcc.Graph(
+                    id={
+                        'type': "correlations-graph",
+                        'index': 0,
+                    }, 
+                    figure=fig
+                ),
             ],
             "dataframe" : df_to_use
         }
