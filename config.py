@@ -7,7 +7,7 @@ MISSING_VALUE_TABLE = {
     "light_conditions": [-1],
     "special_conditions_at_site": [-1, 9],
     "road_surface_conditions": [-1, 9, 6, 7],
-    "junction_control": [-1, 0, 9],
+    "junction_control": [0, 9],
     "junction_detail": [99, -1],
     "time": [],
     "speed_limit": [-1, 660, 630],
@@ -54,6 +54,7 @@ ROAD_SURFACE_CONDITIONS = {
 }
 
 JUNCTION_CONTROL = {
+    'No junction',
     'Authorised person',
     'Automatic traffic signal',
     'Stop sign', 
@@ -217,6 +218,7 @@ ID_TO_JUNCTION_DETAIL = {
 }
 
 ID_TO_JUNCTION_CONTROL = {
+    -1: 'No junction',
     1 : 'Authorised person',
     2 : 'Automatic traffic signal',
     3 : 'Stop sign', 
