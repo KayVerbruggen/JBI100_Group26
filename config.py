@@ -11,7 +11,8 @@ MISSING_VALUE_TABLE = {
     "junction_detail": [99, -1],
     "time": [],
     "speed_limit": [-1, 660, 630],
-    "local_authority_district": [-1],
+    "local_district": [-1],
+    "region": [-1],
 }
 
 ALL_ATTRIBUTES = {
@@ -21,7 +22,8 @@ ALL_ATTRIBUTES = {
     "junction_control",
     "junction_detail",
     "time",
-    "speed_limit"
+    "speed_limit",
+    "region",
 }
 
 LIGHT_CONDITIONS = {
@@ -184,6 +186,11 @@ QUANTITATIVE_ATTRIBS = [
     'fatality_rate',
 ]
 
+LOCATION_ATTRIBS = [
+    'region',
+    'local_district',
+]
+
 SORT_ORDER_OPTIONS = [
     'None',
     'Ascending',
@@ -235,7 +242,7 @@ ID_TO_SPECIAL_CONDITIONS_AT_SITE = {
     7 : 'Mud',
 }
 
-ID_TO_POLICE_FORCE_AREA = {
+ID_TO_REGION = {
     1 : 'Metropolitan Police',
     3 : 'Cumbria',
     4 : 'Lancashire',
@@ -283,7 +290,7 @@ ID_TO_POLICE_FORCE_AREA = {
 
 # Based on this dataset:
 # https://www.ons.gov.uk/peoplepopulationandcommunity/crimeandjustice/datasets/policeforceareadatatables
-POPULATION_BY_POLICE_FORCE_AREA = {
+POPULATION_BY_REGION = {
     'Metropolitan Police': 8991600,
     'Cumbria':              499800,
     'Lancashire':          1515500,

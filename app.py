@@ -15,7 +15,7 @@ from viz_app.views.map import make_map_panel, make_map_graphs
 from viz_app.views.correlations import make_correlations_panel, make_correlations_graphs
 from viz_app.views.trends import make_trends_panel, make_trends_graphs
 import config
-from config import ID_TO_LIGHT_CONDITIONS, ID_TO_JUNCTION_DETAIL, ID_TO_SPECIAL_CONDITIONS_AT_SITE, CATEGORICAL_ATTRIBS, QUANTITATIVE_ATTRIBS, \
+from config import ID_TO_LIGHT_CONDITIONS, ID_TO_JUNCTION_DETAIL, ID_TO_LOCAL_DISTRICT, ID_TO_REGION, ID_TO_SPECIAL_CONDITIONS_AT_SITE, CATEGORICAL_ATTRIBS, LOCATION_ATTRIBS, POPULATION_BY_REGION, QUANTITATIVE_ATTRIBS, \
                    MISSING_VALUE_TABLE, ID_TO_JUNCTION_CONTROL, ID_TO_ROAD_SURFACE_CONDITIONS, ID_TO_SPECIAL_CONDITIONS_AT_SITE, \
                    LIGHT_CONDITIONS, SPECIAL_CONDITIONS_AT_SITE, ROAD_SURFACE_CONDITIONS, \
                    JUNCTION_CONTROL, JUNCTION_DETAIL, ALL_ATTRIBUTES, SPEED_LIMIT
@@ -188,7 +188,7 @@ def add_filter_option(attrib, id, year):
                     html.Label(id={"type": "slider-label-start", "index": id["index"]} ,children = "00:00"),
                     html.Label(id={"type": "slider-label-end", "index": id["index"]} ,children = "23:59")
             ])]
-    elif (attrib in CATEGORICAL_ATTRIBS):
+    elif (attrib in CATEGORICAL_ATTRIBS or attrib in LOCATION_ATTRIBS):
         options = []
         if attrib == "light_conditions":
             options = [{'label': x, 'value': x} for x in LIGHT_CONDITIONS]
@@ -202,6 +202,10 @@ def add_filter_option(attrib, id, year):
             options = [{'label': x, 'value': x} for x in JUNCTION_DETAIL]
         if attrib == "speed_limit":
             options = [{'label': x, 'value': x} for x in SPEED_LIMIT]
+        if attrib == "region":
+            options = [{'label': x[1], 'value': x[0]} for x in ID_TO_REGION.items()]
+        if attrib == "local_district":
+            options = [{'label': x[1], 'value': x[0]} for x in ID_TO_LOCAL_DISTRICT.items()]
         return dcc.Dropdown(className=attrib, id={"type": "filter-action-select", "index": id["index"]}, multi=True, options=options, value="")
 
 # This is a onClick handler for creating new attribute filter
@@ -311,7 +315,10 @@ def display_graphs(pathname, year, map_attribs, map_color_seq, corr_attribs,
         # Filter dataset
         df_filtered = filter_dataset(df, filter_dict)
     if pathname == '/map':
-        return make_map_graphs(df_filtered, map_attribs[0], map_attribs[1], get_seq_cont_color(map_color_seq[0]))
+        regions = []
+        if 'region' in filter_dict:
+            regions = filter_dict['region']
+        return make_map_graphs(df_filtered, regions, map_attribs[0], get_seq_cont_color(map_color_seq[0]))
     elif pathname == '/correlations':
         temp_data = make_correlations_graphs(df_filtered, corr_attribs[0], corr_attribs[1],
                                              get_seq_cont_color(corr_color_seq[0]),

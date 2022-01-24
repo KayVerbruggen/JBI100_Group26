@@ -2,11 +2,11 @@ from dash import html
 from dash import dcc
 import plotly.express as px
 import pandas as pd
-from dash.dependencies import Input, Output, MATCH, ALL
+from dash.dependencies import Input, Output, State
 
 from viz_app.main import app
 
-from config import ID_TO_LOCAL_DISTRICT, ID_TO_POLICE_FORCE_AREA, POPULATION_BY_POLICE_FORCE_AREA, CATEGORICAL_ATTRIBS, QUANTITATIVE_ATTRIBS, SEQ_CONT_COL
+from config import ID_TO_LOCAL_DISTRICT, ID_TO_REGION, POPULATION_BY_REGION, SEQ_CONT_COL
 
 from urllib.request import urlopen
 import json
@@ -29,23 +29,11 @@ def make_map_panel():
             },
             children = [
                 html.Div([
-                    html.Label("Specific Region"),
-                    dcc.Dropdown(
-                        id={
-                            'type': "map-attrib",
-                            'index': 0,
-                        },
-                        options=[{'label': a, 'value': a} 
-                            for a in ['None'] + list(POPULATION_BY_POLICE_FORCE_AREA)],
-                        value='None'
-                    )
-                ]),
-                html.Div([
                     html.Label("Attribute"),
                     dcc.Dropdown(
                         id={
                             'type': "map-attrib",
-                            'index': 1,
+                            'index': 0,
                         },
                         options=[{'label': generate_dropdown_label(a), 'value': a} 
                             for a in ['accident_count_per_capita', 'accident_count', 'fatality_rate']],
@@ -68,32 +56,37 @@ def make_map_panel():
         )]
 
 # Changing the correlations panel
-@app.callback([Output({'type': 'map-attrib', 'index': 1}, 'options'),
-               Output({'type': 'map-attrib', 'index': 1}, 'value')],
-              [Input({'type': 'map-attrib', 'index': 0}, 'value')])
-def map_graph_options(region):
-    # No specific region
-    if region == "None":
-        return [{'label': generate_dropdown_label(a), 'value': a} for a in ['accident_count_per_capita', 'accident_count', 'fatality_rate']], 'accident_count_per_capita'
-    
-    return [{'label': generate_dropdown_label(a), 'value': a} for a in ['accident_count', 'fatality_rate']], 'accident_count'
+@app.callback([Output({'type': 'map-attrib', 'index': 0}, 'options'),
+               Output({'type': 'map-attrib', 'index': 0}, 'value')],
+               # Filter
+                Input("btn-apply-filter", "n_clicks"),
+                State("placeholder", "children"))
+def map_graph_options(n_clicks, filter_json):
+    # Filtered on a specific region
+    if 'region' in filter_json:
+        return [{'label': generate_dropdown_label(a), 'value': a} for a in ['accident_count', 'fatality_rate']], 'accident_count'    
 
-def make_map_graphs(df, region, attrib, map_color_seq):
+    return [{'label': generate_dropdown_label(a), 'value': a} for a in ['accident_count_per_capita', 'accident_count', 'fatality_rate']], 'accident_count_per_capita'
+
+def make_map_graphs(df, regions, attrib, map_color_seq):
     if attrib == None:
         return
         
-    processed_df = df[df['police_force'] < 90][['police_force', 'accident_severity', 'local_authority_district']].copy()
-    processed_df['police_force'] = [ID_TO_POLICE_FORCE_AREA[x] for x in processed_df['police_force']]
+    processed_df = df[df['region'] < 90][['region', 'accident_severity', 'local_district']].copy()
 
     region_map = policeRegions
     region_key = 'properties.PFA20NM'
-    region_attrib = 'police_force'
-    if region != "None":
-        processed_df = processed_df[processed_df['police_force'] == region]
-        processed_df['local_authority_district'] = [ID_TO_LOCAL_DISTRICT[x] for x in processed_df['local_authority_district']]
+    region_attrib = 'region'
+    if regions:
+        print(regions)
+        print(processed_df.head())
+        processed_df = processed_df[processed_df['region'].isin(regions)]
+        processed_df['local_district'] = [ID_TO_LOCAL_DISTRICT[x] for x in processed_df['local_district']]
         region_map = localRegions
         region_key = 'properties.LAD21NM'
-        region_attrib = 'local_authority_district'
+        region_attrib = 'local_district'
+
+    processed_df['region'] = [ID_TO_REGION[x] for x in processed_df['region']]
 
     if attrib == 'fatality_rate':
         processed_df = (processed_df[processed_df['accident_severity']==1].groupby([region_attrib]).size() * 100 \
@@ -103,7 +96,7 @@ def make_map_graphs(df, region, attrib, map_color_seq):
     elif attrib == 'accident_count_per_capita':
         processed_df = processed_df.groupby([region_attrib]).size().reset_index(name='accident_count')
         processed_df[attrib] = [processed_df[processed_df[region_attrib] == x]['accident_count'].values[0] / 
-                                                POPULATION_BY_POLICE_FORCE_AREA[x] for x in processed_df[region_attrib]]
+                                                POPULATION_BY_REGION[x] for x in processed_df[region_attrib]]
         
     fig = px.choropleth(processed_df, geojson=region_map, featureidkey=region_key,
                         locations=region_attrib, color=attrib,
