@@ -55,7 +55,22 @@ app.layout = html.Div(
         className="ten columns",
         children=[
             html.H5("Visualization Tool by Group 26"),
-            html.P("Use the navigation bar above to select a visualization."),
+            html.P("Use the navigation bar above to select a visualization. "
+                   "You can choose from the following options:"),
+            html.H6("Map", style={'text-decoration': 'underline'}),
+            html.P("In this tab, you can locate the distributions of the accident count, fatality rate or accident "
+                   "count per capita in specific regions of Great Britain or Great Britain as a whole. "
+                   "The color of the regions on the map determines how severe the value of the chosen attribute is."),
+            html.H6("Correlations", style={'text-decoration': 'underline'}),
+            html.P("This tab allows you to explore the correlations between two attributes. "
+                   "Depending on the type of the attributes, specific visualizations are created. For example, "
+                   "choosing a categorical attribute on the x axis and a quantitative attribute on the y axis will"
+                   " generate a scatterplot and histogram. This tab has multiple purposes as the histograms generated "
+                   "allow the user to explore the distributions of a specific categorical attribute as well."),
+            html.H6("Trends", style={'text-decoration': 'underline'}),
+            html.P("This tab allows you to compare trends in the accident count or fatality rate "
+                   "between any two years in the dataset. You can also simply just use it to see the trend "
+                   "of any single year. The data of each of the years is shown as a line graph.")
         ]
     ),
     html.Div(
