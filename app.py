@@ -362,7 +362,7 @@ def update_brushing(selected_data, corr_atrib, color_seq, color_disc):
     if len(selected_data) != 2:
         return dash.no_update
     
-    print(selected_data)
+    #print(selected_data)
 
     # If the selected data changed for graph 0.
     if "\"index\":0" in dash.callback_context.triggered[0]['prop_id'] and selected_data[0] != None:
@@ -383,8 +383,8 @@ def update_brushing(selected_data, corr_atrib, color_seq, color_disc):
 
 
 def update_figure_scatter(df, attrib1, attrib2, selectedpoints, corr_color_seq):
-    fig = px.scatter(x=df[attrib1], y=df[attrib2], color=df['fatality_rate'], height=800,
-                     color_continuous_scale=corr_color_seq)
+    fig = px.scatter(df, x=attrib1, y=attrib2, color='fatality_rate', height=800,
+                     color_continuous_scale=corr_color_seq, labels={'fatality_rate': 'Fatality Rate(%)'})
     fig.update_layout(
         yaxis_zeroline=False,
         xaxis_zeroline=False,
@@ -416,16 +416,17 @@ def update_figure_scatter(df, attrib1, attrib2, selectedpoints, corr_color_seq):
 
     # update axis titles
     fig.update_layout(
-        xaxis_title=attrib1,
-        yaxis_title=attrib2,
+        xaxis_title=attrib1.replace("_", " ").title(),
+        yaxis_title=attrib2.replace("_", " ").title(),
     )
 
     return fig
 
 
 def update_figure_histogram(df, attrib1, attrib2, selectedpoints, corr_color_disc):
-    fig = px.histogram(x=df[attrib1], y=df[attrib2], color=df['fatality_rate'], height=800,
-                       nbins=df.index.unique().size, color_discrete_sequence=corr_color_disc)
+    fig = px.histogram(df, x=attrib1, y=attrib2, color='fatality_rate', height=800,
+                       nbins=df.index.unique().size, color_discrete_sequence=corr_color_disc, labels=
+                       {'fatality_rate': 'Fatality Rate(%)'})
 
     fig.update_layout(
         yaxis_zeroline=False,
@@ -461,8 +462,8 @@ def update_figure_histogram(df, attrib1, attrib2, selectedpoints, corr_color_dis
 
     # update axis titles
     fig.update_layout(
-        xaxis_title=attrib1,
-        yaxis_title=attrib2,
+        xaxis_title=attrib1.replace("_", " ").title(),
+        yaxis_title=attrib2.replace("_", " ").title(),
     )
 
     return fig
@@ -543,7 +544,6 @@ def find_closest_interval(row, intervals):
     abs_diff = lambda interval: abs(interval - row["time_index"])
     closest_interval = min(intervals, key=abs_diff)
     return closest_interval
-
 
 if __name__ == '__main__':
     app.run_server(debug=True)

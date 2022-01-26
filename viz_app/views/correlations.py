@@ -140,7 +140,10 @@ def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_di
         final_df = pd.merge(df_temp, df_fatality, on=attributes_to_group)
 
         # Create parallel categories diagram
-        fig = px.parallel_categories(final_df, dimensions=attributes_to_group, color='fatality', color_continuous_scale=corr_color_seq, height=800)
+        fig = px.parallel_categories(final_df, dimensions=attributes_to_group, color='fatality',
+                                     color_continuous_scale=corr_color_seq, height=800, labels={attributes_to_group[0]:
+                                     attributes_to_group[0].replace("_", " ").title(), attributes_to_group[1]:
+                                     attributes_to_group[1].replace("_", " ").title(), 'fatality': 'Fatality Rate(%)'})
         fig.update_layout(
             margin=dict(l=270, r=250, t=20, b=20),
         )
@@ -167,21 +170,24 @@ def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_di
 
         # Create new plot
         fig = px.scatter(df_fatal.reset_index() , x=attrib1, y=attrib2, height=800,
-            color="fatality_rate", color_continuous_scale=corr_color_seq)
+            color="fatality_rate", color_continuous_scale=corr_color_seq, labels=
+                         {attrib1: attrib1.replace("_", " ").title(), attrib2: attrib2.replace("_", " ").title(),
+                          'fatality_rate': 'Fatality Rate(%)'})
         fig = add_sort_order(fig, corr_sort_order)
         fig.update_traces(marker=dict(size=20), selector=dict(mode='markers'))
 
         # Create the Histogram
         fig2 = px.histogram(df_fatal.reset_index(), x=attrib1, y=attrib2, height=800,
                             color="fatality_rate", nbins=df[attrib1].unique().size,
-                            color_discrete_sequence=corr_color_disc)
+                            color_discrete_sequence=corr_color_disc, labels={attrib1: attrib1.replace("_", " ").title(),
+                                        attrib2: attrib2.replace("_", " ").title(), 'fatality_rate': 'Fatality Rate(%)'})
         fig2 = add_sort_order(fig2, corr_sort_order)
         fig2.update_traces(marker=dict(size=10), selector=dict(mode='markers'))
 
         return {
             "children" : [
                 html.H5("Scatter Plot and Histogram"),
-                html.H6("{}(x) vs {}(y)".format(attrib1, attrib2)),
+                html.H6("{}(x) vs {}(y)".format(attrib1.replace("_", " ").title(), attrib2.replace("_", " ").title())),
                 dcc.Graph(
                     id={
                         'type': "correlations-graph",
@@ -223,7 +229,8 @@ def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_di
 
         # Create new plot
         fig = px.scatter(df_fatal.reset_index(), x=attrib1, y=attrib2, height=800,
-                        color=color, color_continuous_scale=colormap)
+                        color=color, color_continuous_scale=colormap, labels={attrib1: attrib1.replace("_", " ").title(),
+                                        attrib2: attrib2.replace("_", " ").title(), 'fatality_rate': 'Fatality Rate(%)'})
 
         fig = add_sort_order(fig, corr_sort_order)
         fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))
@@ -236,7 +243,7 @@ def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_di
         return  {
             "children" : [
                 html.H5("Scatter Plot"),
-                html.H6("{}(x) vs {}(y)".format(attrib1, attrib2)),
+                html.H6("{}(x) vs {}(y)".format(attrib1.replace("_", " ").title(), attrib2.replace("_", " ").title())),
                 dcc.Graph(
                     id={
                         'type': "correlations-graph",
@@ -323,4 +330,5 @@ def find_closest_interval(row, intervals):
     abs_diff = lambda interval: abs(interval - row["time_index"])
     closest_interval = min(intervals, key=abs_diff)
     return closest_interval
+
 

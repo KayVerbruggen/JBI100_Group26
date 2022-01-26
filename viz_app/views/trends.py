@@ -45,9 +45,10 @@ def make_trends_graphs(df, other_year, attrib, trends_color_disc):
     processed_df.sort_values('date', inplace=True)
 
     # Limits on Y axis are somewhat arbitray, but it looks fine for now.
-    fig = px.line(processed_df, x='date', y=attrib, color='accident_year', 
-                        markers=True, range_y=(0, processed_df[attrib].max()*1.1),
-                        labels={'date': 'Date (MM/DD)'}, color_discrete_sequence=trends_color_disc)
+    fig = px.line(processed_df, x='date', y=attrib, color='accident_year', markers=True,
+                  range_y=(0, processed_df[attrib].max()*1.1), labels={'date': 'Date (MM/DD)',
+                  attrib: attrib.replace("_", " ").title(), 'accident_year':'Accident Year'},
+                  color_discrete_sequence=trends_color_disc)
     return [
         html.H5("Trend Graph"),
         dcc.Graph(figure=fig),
