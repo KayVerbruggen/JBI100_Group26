@@ -177,10 +177,10 @@ def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_di
         fig.update_traces(marker=dict(size=20), selector=dict(mode='markers'))
 
         # Create the Histogram
-        fig2 = px.histogram(df_fatal.reset_index(), x=attrib1, y=attrib2, height=800,
-                            color="fatality_rate", nbins=df[attrib1].unique().size,
-                            color_discrete_sequence=corr_color_disc, labels={attrib1: attrib1.replace("_", " ").title(),
-                                        attrib2: attrib2.replace("_", " ").title(), 'fatality_rate': 'Fatality Rate(%)'})
+        fig2 = px.histogram(df_fatal.reset_index(), x=attrib1, y=attrib2, height=800, color=attrib1,
+                            color_discrete_sequence=corr_color_disc,nbins=df[attrib1].unique().size,
+                            labels={attrib1: attrib1.replace("_", " ").title(),
+                            attrib2: attrib2.replace("_", " ").title()})
         fig2 = add_sort_order(fig2, corr_sort_order)
         fig2.update_traces(marker=dict(size=10), selector=dict(mode='markers'))
 

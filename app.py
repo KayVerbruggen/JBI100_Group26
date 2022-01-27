@@ -424,9 +424,9 @@ def update_figure_scatter(df, attrib1, attrib2, selectedpoints, corr_color_seq):
 
 
 def update_figure_histogram(df, attrib1, attrib2, selectedpoints, corr_color_disc):
-    fig = px.histogram(df, x=attrib1, y=attrib2, color='fatality_rate', height=800,
-                       nbins=df.index.unique().size, color_discrete_sequence=corr_color_disc, labels=
-                       {'fatality_rate': 'Fatality Rate(%)'})
+    fig = px.histogram(df, x=attrib1, y=attrib2, color=attrib1, height=800,
+                       nbins=df.index.unique().size, color_discrete_sequence=corr_color_disc,
+                       labels={attrib1: attrib1.replace("_", " ").title()})
 
     fig.update_layout(
         yaxis_zeroline=False,
