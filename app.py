@@ -305,7 +305,8 @@ def filter_by_attributes(list_filter_categorical, list_filter_quantitative, list
                 Input({'type': 'map-colorscale-seq', 'index': ALL}, 'value'),
 
                 # Correlations Options
-                Input({'type': 'correlations-attrib', 'index': ALL}, 'value'),
+                Input({'type': 'correlations-attrib-x', 'index': ALL}, 'value'),
+                Input({'type': 'correlations-attrib-y', 'index': ALL}, 'value'),
                 Input({'type': 'correlations-colorscale-seq', 'index': ALL}, 'value'),
                 Input({'type': 'correlations-colorscale-disc', 'index': ALL}, 'value'),
                 Input({'type': 'correlations-sorting-order', 'index': ALL}, 'value'),
@@ -319,7 +320,7 @@ def filter_by_attributes(list_filter_categorical, list_filter_quantitative, list
                 Input("btn-apply-filter", "n_clicks"),
                 State("placeholder", "children")
             ])
-def display_graphs(pathname, year, map_attribs, map_color_seq, corr_attribs,
+def display_graphs(pathname, year, map_attribs, map_color_seq, corr_attrib_x, corr_attrib_y,
                    corr_color_seq, corr_color_disc, corr_sort_order, k_means, trends_attribs, trends_color_disc, n_clicks, filter_json):
     df = get_data(year)
     df_filtered = df.copy()
@@ -335,7 +336,7 @@ def display_graphs(pathname, year, map_attribs, map_color_seq, corr_attribs,
             regions = filter_dict['region']
         return make_map_graphs(df_filtered, regions, map_attribs[0], get_seq_cont_color(map_color_seq[0]))
     elif pathname == '/correlations':
-        temp_data = make_correlations_graphs(df_filtered, corr_attribs[0], corr_attribs[1],
+        temp_data = make_correlations_graphs(df_filtered, corr_attrib_x[0], corr_attrib_y[0],
                                              get_seq_cont_color(corr_color_seq[0]),
                                              get_disc_color(corr_color_disc[0]), corr_sort_order[0], k_means[0], k_means[1])
         if temp_data:

@@ -1,3 +1,4 @@
+from gc import callbacks
 import os
 from statistics import median
 from dash import html
@@ -27,11 +28,11 @@ def make_correlations_panel():
                         html.Label("X-axis"),
                         dcc.Dropdown(
                             id={
-                                'type': "correlations-attrib",
+                                'type': "correlations-attrib-x",
                                 'index': 0,
                             },
                             options=[{'label': generate_dropdown_label(a), 'value': a} for a in (
-                                CATEGORICAL_ATTRIBS + QUANTITATIVE_ATTRIBS)],
+                                CATEGORICAL_ATTRIBS + ['time'])],
                             searchable=False,
                         ),
                     ]),
@@ -39,12 +40,10 @@ def make_correlations_panel():
                         html.Label("Y-axis"),
                         dcc.Dropdown(
                             id={
-                                'type': "correlations-attrib",
-                                'index': 1,
+                                'type': "correlations-attrib-y",
+                                'index': 0,
                             },
-                            options=[{'label':  generate_dropdown_label(a),
-                                    'value': a} for a in (
-                                CATEGORICAL_ATTRIBS + QUANTITATIVE_ATTRIBS)],
+                            options=[],
                             searchable=False,
                         ),
                     ]),
@@ -111,6 +110,18 @@ def make_correlations_panel():
             )
         ]
 
+@ app.callback([Output({'type': 'correlations-attrib-y', 'index': 0}, 'options'),
+               Output({'type': 'correlations-attrib-y', 'index': 0}, 'value')],
+               Input({'type': 'correlations-attrib-x', 'index': ALL}, 'value'))
+def show_hide_homepage(attrib):
+    possible_attribs = []
+    quant_y = ['accident_count', 'fatality_rate']
+    if attrib[0] in CATEGORICAL_ATTRIBS:
+        possible_attribs = [a for a in CATEGORICAL_ATTRIBS if a != attrib[0]] + quant_y
+    elif attrib[0] in QUANTITATIVE_ATTRIBS:
+        possible_attribs = quant_y
+
+    return [{'label': generate_dropdown_label(a), 'value': a} for a in possible_attribs], '' 
 
 def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_disc, corr_sort_order, k_means, n_clusters):
     # You can use:
@@ -178,9 +189,9 @@ def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_di
 
         # Create the Histogram
         fig2 = px.histogram(df_fatal.reset_index(), x=attrib1, y=attrib2, height=800, color=attrib1,
-                            color_discrete_sequence=corr_color_disc,nbins=df[attrib1].unique().size,
-                            labels={attrib1: attrib1.replace("_", " ").title(),
-                            attrib2: attrib2.replace("_", " ").title()})
+                    color_discrete_sequence=corr_color_disc,nbins=df[attrib1].unique().size,
+                    labels={attrib1: attrib1.replace("_", " ").title(),
+                    attrib2: attrib2.replace("_", " ").title()})
         fig2 = add_sort_order(fig2, corr_sort_order)
         fig2.update_traces(marker=dict(size=10), selector=dict(mode='markers'))
 
@@ -298,9 +309,10 @@ def calculate_fatality_rate(df_temp, attrib1):
     return df_fatal
 
 @ app.callback(Output('correlations-kmeans-settings', 'style'),
-    Input({'type': 'correlations-attrib', 'index': ALL}, 'value'),)
-def show_hide_homepage(attribs):
-    if attribs[0] in QUANTITATIVE_ATTRIBS and attribs[1] in QUANTITATIVE_ATTRIBS:
+    Input({'type': 'correlations-attrib-x', 'index': ALL}, 'value'),
+    Input({'type': 'correlations-attrib-y', 'index': ALL}, 'value'))
+def show_hide_homepage(attrib_x, attrib_y):
+    if attrib_x[0] in QUANTITATIVE_ATTRIBS and attrib_y[0] in QUANTITATIVE_ATTRIBS:
         return {'display': 'block'}
     
     return {'display': 'none'}
