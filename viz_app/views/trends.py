@@ -8,11 +8,9 @@ import pandas as pd
 from config import CATEGORICAL_ATTRIBS, QUANTITATIVE_ATTRIBS, DISCRETE_COL
 from viz_app.views.correlations import generate_dropdown_label
 
-def make_trends_graphs(df, other_year, attrib, trends_color_disc):
-    if other_year == None or attrib == None:
+def make_trends_graphs(df, other_df, attrib, trends_color_disc):
+    if attrib == None:
         return
-    other_df = pd.read_csv(
-        os.getcwd() + "/datasets/road_safety_" + str(other_year) + ".csv")
 
     df_year1 = df[['date', 'accident_year', 'accident_severity']]
     df_year2 = other_df[['date', 'accident_year', 'accident_severity']]

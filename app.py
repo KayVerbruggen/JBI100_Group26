@@ -345,7 +345,13 @@ def display_graphs(pathname, year, map_attribs, map_color_seq, corr_attrib_x, co
         return temp_data
 
     elif pathname == '/trends':
-        return make_trends_graphs(df_filtered, trends_attribs[0], trends_attribs[1], get_disc_color(trends_color_disc[0]))
+        other_df = get_data(trends_attribs[0])
+        other_df_filtered = other_df.copy()
+        # If the apply button is clicked and the filter is not empty
+        if (n_clicks != 0) and (len(filter_dict) != 0):
+            # Filter dataset
+            other_df_filtered = filter_dataset(other_df, filter_dict)
+        return make_trends_graphs(df_filtered, other_df_filtered, trends_attribs[1], get_disc_color(trends_color_disc[0]))
     else:
         return []
     # You could also return a 404 "URL not found" page here
