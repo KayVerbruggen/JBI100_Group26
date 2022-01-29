@@ -14,11 +14,11 @@ def make_trends_graphs(df, other_df, attrib, trends_color_disc):
 
     df_year1 = df[['date', 'accident_year', 'accident_severity']]
     df_year2 = other_df[['date', 'accident_year', 'accident_severity']]
+
     processed_df = pd.concat([df_year1, df_year2], axis=0)
     # Look at only the month.
     #processed_df['date'] = processed_df['date'].str[3:5] 
 
-    # Look day by day (doesn't handle Feb 29 properly)
     processed_df['date'] = processed_df['date'].str[3:6] + processed_df['date'].str[0:2]
     if attrib == 'fatality_rate':
         processed_df = (processed_df[processed_df['accident_severity']==1].groupby(['date', 'accident_year']).size() \
@@ -27,16 +27,16 @@ def make_trends_graphs(df, other_df, attrib, trends_color_disc):
         processed_df = processed_df.groupby(['date', 'accident_year']).size().reset_index(name='accident_count')
     
     years = processed_df['accident_year'].unique()
-    if calendar.isleap(years[0]) and not calendar.isleap(years[1]):
-        processed_df = processed_df.append({
-                'accident_year': years[1], 
-                'date': '02/29', 
-            }, 
-            ignore_index=True)
-    elif not calendar.isleap(years[0]) and calendar.isleap(years[1]):
-        processed_df = processed_df.append({
-                'accident_year': years[0], 
-                'date': '02/29', 
+
+    for index, row in processed_df.iterrows():
+        other_year = years[0]
+        if row['accident_year'] == years[0]:
+            other_year = years[1]
+        
+        if row['date'] not in processed_df[processed_df['accident_year'] == other_year]['date'].unique():
+            processed_df = processed_df.append({
+                'accident_year': other_year, 
+                'date': row['date'],
             }, 
             ignore_index=True)
 
