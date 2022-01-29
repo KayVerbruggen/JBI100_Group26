@@ -121,7 +121,7 @@ def show_hide_homepage(attrib):
     elif attrib[0] in QUANTITATIVE_ATTRIBS:
         possible_attribs = quant_y
 
-    return [{'label': generate_dropdown_label(a), 'value': a} for a in possible_attribs], '' 
+    return [{'label': generate_dropdown_label(a), 'value': a} for a in possible_attribs], None 
 
 def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_disc, corr_sort_order, k_means, n_clusters):
     # You can use:
