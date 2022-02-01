@@ -1,4 +1,4 @@
-# JBI100-example-app
+# JBI100-Road accident in Great Britain Visualization tool
 
 ## About this app
 
