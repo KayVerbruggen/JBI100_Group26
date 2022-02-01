@@ -331,6 +331,9 @@ def filter_by_attributes(list_filter_categorical, list_filter_quantitative, list
             ])
 def display_graphs(pathname, year, map_attribs, map_color_seq, corr_attrib_x, corr_attrib_y,
                    corr_color_seq, corr_color_disc, corr_sort_order, k_means, trends_attribs, trends_color_disc, n_clicks, filter_json):
+    if pathname == '/home':
+        return []
+    
     df = get_data(year)
     df_filtered = df.copy()
     # Parse filter_dict in json format that is stored in "#placeholder"
