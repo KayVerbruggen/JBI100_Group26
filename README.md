@@ -2,24 +2,32 @@
 
 ## About this app
 
-You can use this as a basic template for your JBI100 visualization project.
+The tool provides different visualizations, with the goal of supporting the user to discover or explore whether 
+certain factors contribute to the number of road accidents that happen in Great Britain. The application will 
+mainly focus on the user: Government personnel.
+
+### Libraries
+* Python(Dash), HTML and CSS for interaction and layout
+* Pandas for data processing and manipulation
+* Scikit-learn for data analysis
+* Plotly-express for generating visualization and built-in chart interactions.
 
 ## Requirements
 
 * Python 3 (add it to your path (system variables) to make sure you can access it from the command prompt)
 * Git (https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 
+## Dataset source
+All datasets used in the project was taken from the Road Safety Data collected by Data.gov.uk(Department of Transport)
+More specifically, Road safety data - Accidents 1979-2020. Below is the link to it.
+https://data.gov.uk/dataset/cb7ae6f0-4be6-4935-9277-47e5ce24a11f/road-safety-data
+
 ## How to run this app
 
-We suggest you to create a virtual environment for running this app with Python 3. Clone this repository 
-and open your terminal/command prompt in the root folder.
-
-
-open the command prompt
-cd into the folder where you want to save the files and run the following commands. To get the HTTPS link, press the clone button in the right top corner and then copy the link under "Clone with HTTPS". 
+We suggest you to create a virtual environment for running this app with Python 3. 
+Unzip the submitted zip file containing project source code.
 
 ```
-> git clone <HTTPS link>
 > cd <folder name on your computer>
 > python -m venv venv
 
@@ -51,3 +59,6 @@ You will get a http link, open this in your browser to see the results. You can 
 ## Resources
 
 * [Dash](https://dash.plot.ly/)
+* [Plotly](https://plotly.com/python/plotly-express/)
+* [Scikit-learn](https://scikit-learn.org/stable/)
+* [Pandas](https://pandas.pydata.org/)
