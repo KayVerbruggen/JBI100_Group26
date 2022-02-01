@@ -1,5 +1,4 @@
 import os
-from _plotly_utils.colors import get_colorscale
 import dash
 from dash import html
 from dash import dcc
@@ -14,7 +13,6 @@ from viz_app.storage import Storage
 from viz_app.views.map import make_map_panel, make_map_graphs
 from viz_app.views.correlations import make_correlations_panel, make_correlations_graphs
 from viz_app.views.trends import make_trends_panel, make_trends_graphs
-import config
 from config import ID_TO_LIGHT_CONDITIONS, ID_TO_JUNCTION_DETAIL, ID_TO_LOCAL_DISTRICT, ID_TO_REGION, ID_TO_SPECIAL_CONDITIONS_AT_SITE, CATEGORICAL_ATTRIBS, LOCATION_ATTRIBS, POPULATION_BY_REGION, QUANTITATIVE_ATTRIBS, \
                    MISSING_VALUE_TABLE, ID_TO_JUNCTION_CONTROL, ID_TO_ROAD_SURFACE_CONDITIONS, ID_TO_SPECIAL_CONDITIONS_AT_SITE, \
                    LIGHT_CONDITIONS, SPECIAL_CONDITIONS_AT_SITE, ROAD_SURFACE_CONDITIONS, \
@@ -173,7 +171,8 @@ def add_filter_option(attrib, id, year):
         if (attrib == "time"):
             column = df["time_index"]
             x = "time_index"
-
+        
+        # Get min and max for quantitative attribute
         val_min = column.min()
         val_max = column.max()
         fig = px.histogram(df, x=x)
@@ -189,6 +188,7 @@ def add_filter_option(attrib, id, year):
             "index": id["index"]}, value=[val_min, val_max], min=val_min, max=val_max, \
             step=None, 
             marks={
+                # Labels for the filter slider, since Time is the only quantitative attribute (non-derived)
                 0: {'label': "00"},
                 300: {'label': "03"},
                 600: {'label': "06"},
@@ -203,6 +203,7 @@ def add_filter_option(attrib, id, year):
                     html.Label(id={"type": "slider-label-start", "index": id["index"]} ,children = "00:00"),
                     html.Label(id={"type": "slider-label-end", "index": id["index"]} ,children = "23:59")
             ])]
+        # Show options based on which categorical attribute was selected
     elif (attrib in CATEGORICAL_ATTRIBS or attrib in LOCATION_ATTRIBS):
         options = []
         if attrib == "light_conditions":
@@ -257,6 +258,7 @@ def create_filter(n_clicks, filterSection):
     )
     return filterSection
 
+# Callback function for reacting to slider value changes
 @app.callback(
     Output({"type": "slider-label-start", "index": MATCH}, "children"),
     Output({"type": "slider-label-end", "index": MATCH}, "children"),
@@ -282,6 +284,7 @@ def display_slider_label(interval):
     return start, end
 
 
+# Callbacks for user-defined filters
 @app.callback(
     Output("placeholder", "children"),
     Input({"type": "filter-action-select", "index": ALL}, "value"),
@@ -292,7 +295,9 @@ def filter_by_attributes(list_filter_categorical, list_filter_quantitative, list
     filter_dict = {}
     list_filter = list_filter_categorical + list_filter_quantitative
     list_attrib = list_attribute_categorical + list_attrib_quantitative
+    # Construct filter dictionary
     filter_dict = create_filter_dict(list_filter, list_attrib)
+    # Dumps filter in JSON in a placeholder div that is invisible
     return json.dumps(filter_dict)
 
 
@@ -429,7 +434,6 @@ def update_figure_scatter(df, attrib1, attrib2, selectedpoints, corr_color_seq):
 
     return fig
 
-
 def update_figure_histogram(df, attrib1, attrib2, selectedpoints, corr_color_disc):
     # Create updated histogram
     fig = px.histogram(df, x=attrib1, y=attrib2, color=attrib1, height=800,
@@ -506,6 +510,7 @@ def filter_dataset(df, filter_dict):
     # Iterate through each filter option
     for attrib in filter_dict:
         filter_options = filter_dict[attrib]
+        # Skip if this attribute has no filter yet
         if (len(filter_options) == 0):
             continue
         if (attrib == "time"): 
@@ -523,6 +528,7 @@ def remove_missing_value(df):
     columns = MISSING_VALUE_TABLE.keys()
     df_processed = df.copy()
     for attribute in columns:
+        # Iterate through the look up table to remove missing values
         for missing_value in MISSING_VALUE_TABLE[attribute]:
             df_processed = df_processed[df_processed[attribute] != missing_value]
     return df_processed
