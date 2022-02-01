@@ -192,7 +192,9 @@ def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_di
                     color_discrete_sequence=corr_color_disc,nbins=df[attrib1].unique().size,
                     labels={attrib1: attrib1.replace("_", " ").title(),
                     attrib2: attrib2.replace("_", " ").title()})
+        # Configures sorting order type
         fig2 = add_sort_order(fig2, corr_sort_order)
+
         fig2.update_traces(marker=dict(size=10), selector=dict(mode='markers'))
 
         return {
@@ -304,7 +306,7 @@ def add_sort_order(fig, req_order):
         fig.update_xaxes(categoryorder="category ascending")
     return fig
 
-
+# Helper function to add fatality rate attribute to df
 def calculate_fatality_rate(df_temp, attrib1):
     # Compute the number of fatal accidents in each category
     df_fatal = df_temp[['accident_severity', attrib1]][df_temp["accident_severity"] == 1].groupby(attrib1).count()[

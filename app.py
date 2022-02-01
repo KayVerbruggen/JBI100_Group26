@@ -388,6 +388,7 @@ def update_brushing(selected_data, corr_atrib, color_seq, color_disc):
 
 
 def update_figure_scatter(df, attrib1, attrib2, selectedpoints, corr_color_seq):
+    # Create updated scatterplot
     fig = px.scatter(df, x=attrib1, y=attrib2, color='fatality_rate', height=800,
                      color_continuous_scale=corr_color_seq, labels={'fatality_rate': 'Fatality Rate(%)'})
     fig.update_layout(
@@ -395,6 +396,7 @@ def update_figure_scatter(df, attrib1, attrib2, selectedpoints, corr_color_seq):
         xaxis_zeroline=False,
         dragmode='select'
     )
+    # disable pan/zoom
     fig.update_xaxes(fixedrange=True)
     fig.update_yaxes(fixedrange=True)
 
@@ -407,6 +409,7 @@ def update_figure_scatter(df, attrib1, attrib2, selectedpoints, corr_color_seq):
             for point in selectedpoints['points']
         ]
 
+    # Update selected and unselected points with colors accordingly
     fig.update_traces(
         mode='markers',
         marker_size=20,
@@ -418,7 +421,6 @@ def update_figure_scatter(df, attrib1, attrib2, selectedpoints, corr_color_seq):
         unselected=dict(marker=dict(opacity=0.2))
     )
 
-
     # update axis titles
     fig.update_layout(
         xaxis_title=attrib1.replace("_", " ").title(),
@@ -429,6 +431,7 @@ def update_figure_scatter(df, attrib1, attrib2, selectedpoints, corr_color_seq):
 
 
 def update_figure_histogram(df, attrib1, attrib2, selectedpoints, corr_color_disc):
+    # Create updated histogram
     fig = px.histogram(df, x=attrib1, y=attrib2, color=attrib1, height=800,
                        nbins=df.index.unique().size, color_discrete_sequence=corr_color_disc,
                        labels={attrib1: attrib1.replace("_", " ").title()})
@@ -438,6 +441,7 @@ def update_figure_histogram(df, attrib1, attrib2, selectedpoints, corr_color_dis
         xaxis_zeroline=False,
         dragmode='select'
     )
+    # disable pan/zoom
     fig.update_xaxes(fixedrange=True)
     fig.update_yaxes(fixedrange=True)
 
@@ -453,10 +457,11 @@ def update_figure_histogram(df, attrib1, attrib2, selectedpoints, corr_color_dis
     fig.update_traces(
         # color of selected points
         selected=dict(marker=dict(opacity=1.0)),
-        # color of unselected pts
+        # color of unselected pts made dim
         unselected=dict(marker=dict(opacity=0.2))
     )
 
+    # obtain unselected indexes
     current_indexes = [ x for x in range( len(fig.data) ) ]
     unselected_indexes = [x for x in current_indexes if x not in selected_index]
 
