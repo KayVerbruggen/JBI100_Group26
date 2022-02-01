@@ -200,12 +200,10 @@ QUANTITATIVE_ATTRIBS = [
     'fatality_rate',
 ]
 
-
 LOCATION_ATTRIBS = [
     'region',
     'local_district',
 ]
-
 
 SORT_ORDER_OPTIONS = [
     'None',
