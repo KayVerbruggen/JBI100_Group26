@@ -223,16 +223,23 @@ def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_di
         color = "fatality_rate"
         colormap=corr_color_seq
 
+        # If we are using k_means, do the clustering using scikit-learn.
         if 'k_means' in k_means:
+            # Use a discrete colormap for the coloring of different clusters.
             colormap=corr_color_disc
 
             df_kmeans = df_to_use[[attrib2]].reset_index().copy()
+
+            # We need time to be numerical, so we convert from HH:MM -> minutes passed
             df_kmeans['time'] = [int(x[0:2])*60 + int(x[3:5]) for x in df_kmeans['time']]
-            #print(df_kmeans.head())
+            
             kmeans = KMeans(n_clusters=n_clusters).fit(df_kmeans)
-            # Z = kmeans.predict(X_reduced)
+
             color = kmeans.labels_
+            
+            # Convert back to HH:MM so we can plot it
             centroid_time = [min_to_time(x) for x in kmeans.cluster_centers_[:,0]]
+
             fig2 = px.scatter(x=centroid_time, y=kmeans.cluster_centers_[:,1],
                         color=range(0, n_clusters), color_continuous_scale=corr_color_disc,
                                     color_discrete_sequence=corr_color_disc)
@@ -246,6 +253,9 @@ def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_di
         fig = add_sort_order(fig, corr_sort_order)
         fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))
 
+        # If we have k_means enabled: 
+        #   - add the additional markers 
+        #   - lower the opacity of the normal markers
         if 'k_means' in k_means:
             fig.update_traces(marker=dict(opacity=0.3), selector=dict(mode='markers'))
             fig.add_trace(fig2.data[0])
@@ -271,6 +281,7 @@ def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_di
             "dataframe" : []
         }
 
+# Convert the number of minutes that have passed in a day to HH:MM
 def min_to_time(mins):
     hours = int(mins/60)
     remainder_mins = int(mins%60)

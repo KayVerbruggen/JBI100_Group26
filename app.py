@@ -368,8 +368,6 @@ def update_brushing(selected_data, corr_atrib, color_seq, color_disc):
     # If there are no two graphs, don't change anything.
     if len(selected_data) != 2:
         return dash.no_update
-    
-    #print(selected_data)
 
     # If the selected data changed for graph 0.
     if "\"index\":0" in dash.callback_context.triggered[0]['prop_id'] and selected_data[0] != None:

@@ -18,7 +18,7 @@ with urlopen('https://opendata.arcgis.com/datasets/ac4ad96a586b4e4bab306dd59eb09
     localRegions = json.load(response)
 
 
-
+# The settings for the map visualization.
 def make_map_panel():
     return [
         html.Div(
@@ -72,14 +72,15 @@ def make_map_graphs(df, regions, attrib, map_color_seq):
     if attrib == None:
         return
         
+    # Filter out the accidents in Scotland since we don't have a map which supports this.
     processed_df = df[df['region'] < 90][['region', 'accident_severity', 'local_district']].copy()
 
     region_map = policeRegions
     region_key = 'properties.PFA20NM'
     region_attrib = 'region'
+
+    # If we are filtering on specific regions, we want to show the more detailed map.
     if regions:
-        print(regions)
-        print(processed_df.head())
         processed_df = processed_df[processed_df['region'].isin(regions)]
         processed_df['local_district'] = [ID_TO_LOCAL_DISTRICT[x] for x in processed_df['local_district']]
         region_map = localRegions
@@ -88,6 +89,7 @@ def make_map_graphs(df, regions, attrib, map_color_seq):
 
     processed_df['region'] = [ID_TO_REGION[x] for x in processed_df['region']]
 
+    # Process the data according to the attrib.
     if attrib == 'fatality_rate':
         processed_df = (processed_df[processed_df['accident_severity']==1].groupby([region_attrib]).size() * 100 \
                         / processed_df.groupby([region_attrib]).size()).reset_index(name='fatality_rate')    
