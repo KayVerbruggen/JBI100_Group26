@@ -86,6 +86,10 @@ def make_trends_panel():
                         value='accident_count',
                     )
                 ]),
+                # A dropdown that allows the user to choose another discrete color palette. 
+                # Discrete colors to distinguish the lines of the two plots. (the two years are discrete)
+                # These color palettes are built-in from Plotly. See 
+                # https://plotly.com/python/discrete-color/
                 html.Div([
                     html.Label("Color Scale - Discrete"),
                     dcc.Dropdown(
@@ -95,6 +99,7 @@ def make_trends_panel():
                         },
                         options=[{"value": x, "label": x} 
                             for x in DISCRETE_COL],
+                        # Default color palette Pastel1
                         value='Pastel1'
                     )])
                 ])

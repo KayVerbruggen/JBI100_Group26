@@ -203,7 +203,11 @@ def add_filter_option(attrib, id, year):
                     html.Label(id={"type": "slider-label-start", "index": id["index"]} ,children = "00:00"),
                     html.Label(id={"type": "slider-label-end", "index": id["index"]} ,children = "23:59")
             ])]
-        # Show options based on which categorical attribute was selected
+    # Show options based on which categorical attribute was selected
+    # After choosing an attribute, another dropdown appears just below it
+    # that shows all distinct values within that attribute. 
+    # The dropdown allows the user to select multiple values. (for filtering
+    # purposes)
     elif (attrib in CATEGORICAL_ATTRIBS or attrib in LOCATION_ATTRIBS):
         options = []
         if attrib == "light_conditions":
@@ -535,7 +539,9 @@ def remove_missing_value(df):
 
 # Map IDS to the corresponding value
 def id_to_value(df):
+    # Copy data set
     df_mapped = df.copy()
+    # Replace ID to the actual value
     return df_mapped.replace({'light_conditions': ID_TO_LIGHT_CONDITIONS, 'junction_detail': ID_TO_JUNCTION_DETAIL, \
                               'junction_control': ID_TO_JUNCTION_CONTROL,
                               'road_surface_conditions': ID_TO_ROAD_SURFACE_CONDITIONS, \

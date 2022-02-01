@@ -15,6 +15,7 @@ MISSING_VALUE_TABLE = {
     "region": [-1],
 }
 
+# Dictionary containing all attribute names
 ALL_ATTRIBUTES = {
     "light_conditions",
     "special_conditions_at_site",
@@ -26,6 +27,7 @@ ALL_ATTRIBUTES = {
     "region",
 }
 
+# Distinct values within light conditions
 LIGHT_CONDITIONS = {
     'Daylight',
     'Darkness: street lights present and lit',
@@ -34,6 +36,7 @@ LIGHT_CONDITIONS = {
     'Darkness: street lighting unknown',
 }
 
+# Distinct values within special conditions at site
 SPECIAL_CONDITIONS_AT_SITE = {
     'None',
     'Auto traffic signal out',
@@ -45,6 +48,7 @@ SPECIAL_CONDITIONS_AT_SITE = {
     'Mud',
 }
 
+# Distinct values within road surface conditions
 ROAD_SURFACE_CONDITIONS = {
     'Dry',
     'Wet / Damp',
@@ -53,6 +57,7 @@ ROAD_SURFACE_CONDITIONS = {
     'Flood (surface water over 3cm deep)',
 }
 
+# Distinct values within junction control
 JUNCTION_CONTROL = {
     'No junction',
     'Authorised person',
@@ -61,6 +66,7 @@ JUNCTION_CONTROL = {
     'Give way or uncontrolled',
 }
 
+# Distinct values within junction detail
 JUNCTION_DETAIL = {
     'Not at or within 20 metres of junction',
     'Roundabout',
@@ -73,6 +79,7 @@ JUNCTION_DETAIL = {
     'Other junction',
 }
 
+# Distinct values within speed limit
 SPEED_LIMIT = {
     20,
     30,
@@ -82,6 +89,8 @@ SPEED_LIMIT = {
     70
 }
 
+# Built-in discrete color palettes of Plotly 
+# See https://plotly.com/python/discrete-color/
 DISCRETE_COL = {
     'Plotly',
     'D3',
@@ -104,6 +113,8 @@ DISCRETE_COL = {
     'Vivid',
 }
 
+# Built-in sequential continuous color palettes of Plotly
+# See https://plotly.com/python/builtin-colorscales/
 SEQ_CONT_COL = {
     'Plotly3',
     'Viridis',
@@ -172,6 +183,7 @@ SEQ_CONT_COL = {
     'Brwnyl'
 }
 
+# All categorical attributes
 CATEGORICAL_ATTRIBS = [
     'speed_limit',
     'light_conditions',
@@ -181,22 +193,27 @@ CATEGORICAL_ATTRIBS = [
     'special_conditions_at_site',
 ]
 
+# All quantitative attributes
 QUANTITATIVE_ATTRIBS = [
     'time',
     'accident_count',
     'fatality_rate',
 ]
 
+
 LOCATION_ATTRIBS = [
     'region',
     'local_district',
 ]
+
 
 SORT_ORDER_OPTIONS = [
     'None',
     'Ascending',
     'Descending',
 ]
+
+# Mapping ids of light conditions to the corresponding value
 ID_TO_LIGHT_CONDITIONS = {
     1 : 'Daylight',
     4 : 'Darkness: street lights present and lit',
@@ -205,6 +222,7 @@ ID_TO_LIGHT_CONDITIONS = {
     7 : 'Darkness: street lighting unknown',
 }
 
+# Mapping ids of junction detail to the corresponding value
 ID_TO_JUNCTION_DETAIL = {
     0 : 'Not at or within 20 metres of junction',
     1 : 'Roundabout',
@@ -217,6 +235,7 @@ ID_TO_JUNCTION_DETAIL = {
     9 : 'Other junction',
 }
 
+# Mapping ids of junction control to the corresponding value
 ID_TO_JUNCTION_CONTROL = {
     -1: 'No junction',
     1 : 'Authorised person',
@@ -225,6 +244,7 @@ ID_TO_JUNCTION_CONTROL = {
     4 : 'Give way or uncontrolled',
 }
 
+# Mapping ids of road surface conditions to the corresponding value
 ID_TO_ROAD_SURFACE_CONDITIONS = {
     1 : 'Dry',
     2 : 'Wet / Damp',
@@ -233,6 +253,7 @@ ID_TO_ROAD_SURFACE_CONDITIONS = {
     5 : 'Flood (surface water over 3cm deep)',
 }
 
+# Mapping ids of special conditions at site to the corresponding value
 ID_TO_SPECIAL_CONDITIONS_AT_SITE = {
     0 : 'None',
     1 : 'Auto traffic signal out',

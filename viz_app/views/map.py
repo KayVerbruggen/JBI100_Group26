@@ -40,6 +40,10 @@ def make_map_panel():
                         value='accident_count_per_capita'
                     )
                 ]),
+                # A dropdown that allows the user to choose another sequential continuous color palette. 
+                # Sequential and Continuous color palettes only, because the fatality rate is 
+                # sequentially ordered. The color palettes are built-in from Plotly, see
+                # https://plotly.com/python/builtin-colorscales/ 
                 html.Div([
                     html.Label("Color Scale - Sequential"),
                     dcc.Dropdown(
@@ -49,6 +53,7 @@ def make_map_panel():
                         },
                         options=[{"value": x, "label": x} 
                             for x in SEQ_CONT_COL],
+                        # Default color pallete 'Reds'
                         value='Reds'
                     )
                 ])

@@ -47,6 +47,10 @@ def make_correlations_panel():
                             searchable=False,
                         ),
                     ]),
+                    # A dropdown that allows the user to choose another sequential continuous color palette. 
+                    # Sequential and Continuous color palettes only, because the fatality rate is 
+                    # sequentially ordered. The color palettes are built-in from Plotly, see
+                    # https://plotly.com/python/builtin-colorscales/ 
                     html.Div([
                         html.Label("Color Scale - Sequential"),
                         dcc.Dropdown(
@@ -59,6 +63,12 @@ def make_correlations_panel():
                             value='Reds'
                             ),
                     ]),
+                    # A dropdown that allows the user to choose another discrete color palette. 
+                    # Discrete colors to distinguish the categorical variables for the
+                    # bar chart. 
+                    # These color palettes are built-in from Plotly. See 
+                    # https://plotly.com/python/discrete-color/
+
                     html.Div([
                         html.Label("Color Scale - Discrete"),
                         dcc.Dropdown(
@@ -151,6 +161,7 @@ def make_correlations_graphs(df, attrib1, attrib2, corr_color_seq, corr_color_di
         final_df = pd.merge(df_temp, df_fatality, on=attributes_to_group)
 
         # Create parallel categories diagram
+        # Add third attribute: fatality rate as color
         fig = px.parallel_categories(final_df, dimensions=attributes_to_group, color='fatality',
                                      color_continuous_scale=corr_color_seq, height=800, labels={attributes_to_group[0]:
                                      attributes_to_group[0].replace("_", " ").title(), attributes_to_group[1]:
