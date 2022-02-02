@@ -372,11 +372,12 @@ def display_graphs(pathname, year, map_attribs, map_color_seq, corr_attrib_x, co
     Output({'type': 'correlations-graph', 'index': ALL}, 'figure'), 
         Input({'type': 'correlations-graph', 'index': ALL}, 'selectedData'),
     [
-        State({'type': 'correlations-attrib', 'index': ALL}, 'value'),
+        State({'type': 'correlations-attrib-x', 'index': ALL}, 'value'),
+        State({'type': 'correlations-attrib-y', 'index': ALL}, 'value'),
         State({'type': 'correlations-colorscale-seq', 'index': ALL}, 'value'),
         State({'type': 'correlations-colorscale-disc', 'index': ALL}, 'value'),
     ])
-def update_brushing(selected_data, corr_atrib, color_seq, color_disc):
+def update_brushing(selected_data, corr_atrib_x, corr_atrib_y, color_seq, color_disc):
     # If there are no two graphs, don't change anything.
     if len(selected_data) != 2:
         return dash.no_update
@@ -386,12 +387,12 @@ def update_brushing(selected_data, corr_atrib, color_seq, color_disc):
         # Update the second graph and leave the first the same.
         return [
             dash.no_update, 
-            update_figure_histogram(storage.get(), corr_atrib[0], corr_atrib[1], selected_data[0], get_disc_color(color_disc[0]))
+            update_figure_histogram(storage.get(), corr_atrib_x[0], corr_atrib_y[0], selected_data[0], get_disc_color(color_disc[0]))
         ]
     elif "\"index\":1" in dash.callback_context.triggered[0]['prop_id'] and selected_data[1] != None:
         # Update the first graph and leave the second the same.
         return [
-            update_figure_scatter(storage.get(), corr_atrib[0], corr_atrib[1], selected_data[1], color_seq[0]), 
+            update_figure_scatter(storage.get(), corr_atrib_x[0], corr_atrib_y[0], selected_data[1], color_seq[0]), 
             dash.no_update
         ]
     
